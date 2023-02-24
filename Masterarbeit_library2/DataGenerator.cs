@@ -169,44 +169,128 @@ public class DataGenerator
         }
 
 
-        
-        //int realvolumetest = length * width * height;
-     
-        //while ((volume - realvolumetest) > (volume * 0.3)) //how much it is allowed to deviate from the volume input
-        //{
-        //    if (realvolumetest == 0 || realvolumetest > volume) { break; }
-
-        //    int caser = 0;
-        //    if (length / optimallength < width / optimalwidth && length / optimallength < height / optimalheight) { caser = 1; } //length is too far off            
-        //    else if (width / optimalwidth < length / optimallength && width / optimalwidth < height / optimalheight) { caser = 2; }//width is too far off
-        //    else if (height / optimalheight < length / optimallength && height / optimalheight < width / optimalwidth) { caser = 3; }
-        //    switch (caser)
-        //    {
-        //        case 1: 
-        //            if ((optimallength - length) > 1.5) { length += Convert.ToInt32(rnd.NextDouble() * (optimallength - length)); realvolumetest = length * width * height; break; } //imagine 8 reaching 10, if opt is 9 it wouldnt increase, if 9,1 then the random double would still stall
-        //            else if ((optimallength - length) < 1.5 && Data[size].Item2.Length - optimallength > 1) { length = Convert.ToInt32(optimallength); realvolumetest = length * width * height; break; } // imagine 6 to 7.1, no need to calculate
-        //            else if ((optimallength - length) < 1.5 && Data[size].Item2.Length - optimallength < 1) { length = Data[size].Item2.Length; realvolumetest = length * width * height; break; } //imagine 8.8 to 9,4 (max 10), we just go max. 
-        //            else break;
-
-        //        case 2:
-        //            if ((optimalwidth - width) > 1.5) { width += Convert.ToInt32(rnd.NextDouble() * (optimalwidth - width)); realvolumetest = length * width * height; break; }
-        //            else if ((optimalwidth - width) < 1.5 && Data[size].Item2.Width - optimalwidth > 1) { width = Convert.ToInt32(optimalwidth); realvolumetest = length * width * height; break; }
-        //            else if ((optimalwidth - width) < 1.5 && Data[size].Item2.Width - optimalwidth < 1) { width = Data[size].Item2.Width; realvolumetest = length * width * height; break; }
-        //            else break;
-        //        case 3:
-        //            if ((optimalheight - height) > 1.5) { height += Convert.ToInt32(rnd.NextDouble() * (optimalheight - height)); realvolumetest = length * width * height; break; }
-        //            else if ((optimalheight - height) < 1.5 && Data[size].Item2.Height - optimalheight > 1) { height = Convert.ToInt32(optimalheight); realvolumetest = length * width * height; break; }
-        //            else if ((optimalheight - height) < 1.5 && Data[size].Item2.Height - optimalheight < 1) { height = Data[size].Item2.Height; realvolumetest = length * width * height; break; }
-        //            else break;
-
-
-        //    }
-        //}
+       
         Package rando2 = new Package(length,width,height); 
         rando = rando2;
         realvolume = length * width * height;
         return rando;
     }
+    //public Package2D RandomPackage2D(string size, int volume, out int realvolume) //note that size needs to be defined with a min and max package
+    //{
+    //    Random rnd = new Random();
+    //    int length = 0;
+    //    int width = 0;
+       
+    //    double tolerance = 0.2;
+    //    Package2D rando = new Package2D(length, width);
+    //    double optimallength = 0, optimalwidth = 0;
+    //    double volumeposition = Convert.ToDouble(volume - Data[size].Item1.Volume); //remove the small package volume from the existing volume.
+    //    double positioninrange = volumeposition / (Convert.ToDouble(Data[size].Item2.Volume) - Convert.ToDouble(Data[size].Item1.Volume)); //where does it lie within the two allowed sizes of packages
+    //    optimallength = (Data[size].Item1.Length + ((Data[size].Item2.Length - Data[size].Item1.Length)) * positioninrange);
+    //    optimalwidth = (Data[size].Item1.Width + ((Data[size].Item2.Width - Data[size].Item1.Width)) * positioninrange);
+
+    //    int lrangemin = 0, lrangemax = 0, wrangemin = 0, wrangemax = 0;
+    //    if (optimalwidth * (1 + tolerance) >= Data[size].Item2.Width)
+    //    {
+
+            
+    //        lrangemax = Data[size].Item2.Length;
+    //        lrangemin = Convert.ToInt32(optimallength * (1 - tolerance));
+    //        wrangemax = Data[size].Item2.Width;
+    //        wrangemin = Convert.ToInt32(optimalwidth * (1 - tolerance));
+    //    }
+    //    else if (optimalwidth * (1 + tolerance) < Data[size].Item2.Width && (optimalwidth * (1 - tolerance)) > Data[size].Item1.Width)
+    //    {
+         
+    //        lrangemax = Convert.ToInt32(optimallength * (1 + tolerance));
+    //        lrangemin = Convert.ToInt32(optimallength * (1 - tolerance));
+    //        wrangemax = Convert.ToInt32(optimalwidth * (1 + tolerance));
+    //        wrangemin = Convert.ToInt32(optimalwidth * (1 - tolerance));
+
+    //    }
+    //    else if ((optimalwidth * (1 - tolerance)) <= Data[size].Item1.Width)
+    //    {
+          
+    //        lrangemax = Convert.ToInt32(optimallength + tolerance * optimallength);
+    //        lrangemin = Data[size].Item1.Length;
+    //        wrangemax = Convert.ToInt32(optimalwidth + tolerance * optimalwidth);
+    //        wrangemin = Data[size].Item1.Width;
+
+    //    }
+
+    //    if (Data.ContainsKey(size))
+
+    //    {
+
+    //        List<string> dimension = new List<string>();
+    //        dimension.AddRange(new string[] { "Length", "Width"});
+    //        string d1 = dimension[rnd.Next(dimension.Count)]; dimension.Remove(d1);
+    //        string d2 = dimension[rnd.Next(dimension.Count)]; dimension.Remove(d2); //random choice of dimensions
+    //        if ((d1.Contains("Length") && d2.Contains("Width")) || (d2.Contains("Length") && d1.Contains("Width")))
+    //        {
+    //            length = rnd.Next(lrangemin, lrangemax + 1); // where the multiplier would land us in range +- tolerance
+               
+    //            width = volume / (length); //will round down
+    //            if (width > Data[size].Item2.Width) { width = Data[size].Item2.Width; } //if it overreaches then modify
+    //            else if (width < Data[size].Item1.Height) { width = Data[size].Item1.Height; }
+
+    //        }
+    //        else if ((d2.Contains("Length") && d1.Contains("Width")) || (d1.Contains("Length") && d2.Contains("Width")))
+    //        {
+
+               
+    //            width = rnd.Next(wrangemin, wrangemax + 1);
+    //            length = volume / (width); //will round down
+    //            if (length > Data[size].Item2.Length) { length = Data[size].Item2.Length; } //if it overreaches then modify
+    //            else if (length < Data[size].Item1.Length) { length = Data[size].Item1.Length; }
+    //        }
+          
+
+    //    }
+    //    else
+    //    {
+    //        rando.Error = "There is no info on package size in the dictionary";
+    //    }
+
+
+
+    //    //int realvolumetest = length * width * height;
+
+    //    //while ((volume - realvolumetest) > (volume * 0.3)) //how much it is allowed to deviate from the volume input
+    //    //{
+    //    //    if (realvolumetest == 0 || realvolumetest > volume) { break; }
+
+    //    //    int caser = 0;
+    //    //    if (length / optimallength < width / optimalwidth && length / optimallength < height / optimalheight) { caser = 1; } //length is too far off            
+    //    //    else if (width / optimalwidth < length / optimallength && width / optimalwidth < height / optimalheight) { caser = 2; }//width is too far off
+    //    //    else if (height / optimalheight < length / optimallength && height / optimalheight < width / optimalwidth) { caser = 3; }
+    //    //    switch (caser)
+    //    //    {
+    //    //        case 1: 
+    //    //            if ((optimallength - length) > 1.5) { length += Convert.ToInt32(rnd.NextDouble() * (optimallength - length)); realvolumetest = length * width * height; break; } //imagine 8 reaching 10, if opt is 9 it wouldnt increase, if 9,1 then the random double would still stall
+    //    //            else if ((optimallength - length) < 1.5 && Data[size].Item2.Length - optimallength > 1) { length = Convert.ToInt32(optimallength); realvolumetest = length * width * height; break; } // imagine 6 to 7.1, no need to calculate
+    //    //            else if ((optimallength - length) < 1.5 && Data[size].Item2.Length - optimallength < 1) { length = Data[size].Item2.Length; realvolumetest = length * width * height; break; } //imagine 8.8 to 9,4 (max 10), we just go max. 
+    //    //            else break;
+
+    //    //        case 2:
+    //    //            if ((optimalwidth - width) > 1.5) { width += Convert.ToInt32(rnd.NextDouble() * (optimalwidth - width)); realvolumetest = length * width * height; break; }
+    //    //            else if ((optimalwidth - width) < 1.5 && Data[size].Item2.Width - optimalwidth > 1) { width = Convert.ToInt32(optimalwidth); realvolumetest = length * width * height; break; }
+    //    //            else if ((optimalwidth - width) < 1.5 && Data[size].Item2.Width - optimalwidth < 1) { width = Data[size].Item2.Width; realvolumetest = length * width * height; break; }
+    //    //            else break;
+    //    //        case 3:
+    //    //            if ((optimalheight - height) > 1.5) { height += Convert.ToInt32(rnd.NextDouble() * (optimalheight - height)); realvolumetest = length * width * height; break; }
+    //    //            else if ((optimalheight - height) < 1.5 && Data[size].Item2.Height - optimalheight > 1) { height = Convert.ToInt32(optimalheight); realvolumetest = length * width * height; break; }
+    //    //            else if ((optimalheight - height) < 1.5 && Data[size].Item2.Height - optimalheight < 1) { height = Data[size].Item2.Height; realvolumetest = length * width * height; break; }
+    //    //            else break;
+
+
+    //    //    }
+    //    //}
+    //    Package2D rando2 = new Package2D(length, width);
+    //    rando = rando2;
+    //    realvolume = length * width;
+    //    return rando;
+    //}
     public void FillDataList()
     {
         List<Package> filllist = new List<Package>();

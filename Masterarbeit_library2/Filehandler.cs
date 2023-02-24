@@ -11,8 +11,8 @@ public class Filehandler
 {
     public string? Input { get; set; }
     public string? Output { get; set; }
-
-    public List<Package> Packagelist { get; set; } = new List<Package>();
+    public Package2D Depot { get; set; }
+    public List<Package2D> Packagelist { get; set; } = new List<Package2D>();
     public Filehandler(string input)
     {
         Input = input;
@@ -55,8 +55,8 @@ public class Filehandler
                 }
             }
 
-            int startindex = 0;
-            for (int i = 0; i < lines.Count; i++)
+            int startindex = 2;
+            for (int i = 2; i < lines.Count; i++)
             {
                 if (lines[i].StartsWith("1") | lines[i].StartsWith("01"))
                 {
@@ -66,16 +66,24 @@ public class Filehandler
             }
             for (int i = startindex; i < lines.Count; i++)
             {
-                string[] parts = lines[i].Split(';');
+                string[] parts = lines[i].Split(" ");
                 int x = Convert.ToInt32(parts[1]);
                 int y = Convert.ToInt32(parts[2]);
-                int z = Convert.ToInt32(parts[3]);
-                Package p = new Package(x, y, z);
-                p.Indexes.Add("Loadorder", i);
+               
+                Package2D p = new Package2D(x, y);
+                p.Indexes.Add("Instance", Convert.ToInt32(parts[0]));
                 Packagelist.Add(p);
 
             }
+            string[] parts2 = lines[startindex-2].Split(" ");
+            string[] parts3 = lines[startindex - 1].Split(" ");
+            int xdepot = Convert.ToInt32(parts2[0]);
+            int ydepot = Convert.ToInt32(parts3[0]);
 
+            Package2D depot = new Package2D(xdepot, ydepot);
+            depot.Indexes.Add("Depot", 0);
+            Depot = depot;
+            
 
         }
         return;

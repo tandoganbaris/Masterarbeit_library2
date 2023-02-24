@@ -1,0 +1,451 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Masterarbeit_library2;
+//WPF 2d packages rectangle data binding 
+
+public class Package2D
+{
+
+    public int Length { get; set; } //x
+    public int LengthOG { get; set; }
+    public int Width { get; set; } //y
+    public int WidthOG { get; set; }
+    public double Weight { get; set; }
+    public string Size { get; set; }
+
+    public Dictionary<string, int> Indexes { get; set; } = new Dictionary<string, int>(); //index in tsp input, index in route, index in load order, index in section etc. 
+
+    public bool IsLoaded { get; set; }
+
+    public string Error { get; set; }
+
+    public int Volume { get; set; }
+
+    public Dictionary<string, bool> Rotationallowance { get; set; } = new Dictionary<string, bool>(); //YZ , XZ, XY 
+
+    public List<Point2D> Pointslist { get; set; }
+    public List<Vertex2D> Vertixes { get; set; } = new List<Vertex2D>();
+    public Package2D(int length, int width)
+    {
+        Length = length;
+        LengthOG = length;
+        Width = width;
+        WidthOG = width;
+
+
+        Pointslist = new List<Point2D>();
+        if (length > 0 && width > 0)
+        {
+            Volume = length * width;
+            int startingindex = 1;
+            while (Pointslist.Count < 4)
+            {
+
+                Point2D p = new Point2D(0, 0, startingindex); Pointslist.Add(p);
+                startingindex++;
+
+
+            }
+            List<Vertex2D> verts = new List<Vertex2D>();
+            for (int i = 1; i <= 4; i++)
+            {
+                string h1 = "Horizontal";
+                string h2 = "Vertical";
+
+                switch (i) //indicate also direction as a vector for later calculation using vertices
+                {
+                    case 1:
+                        {
+                            Vertex2D v1 = new Vertex2D(Pointslist[i - 1], Pointslist[i], h1); // 1-2
+                            Vertex2D v4 = new Vertex2D(Pointslist[i - 1], Pointslist[i + 2], h2); //1-4
+                            v1.ID = "v1";
+                            v4.ID = "v4";
+
+
+                            verts.Add(v1); verts.Add(v4);
+                            break;
+                        }
+                    case 2:
+                        {
+                            Vertex2D v2 = new Vertex2D(Pointslist[i - 1], Pointslist[i], h2); // 2-3
+                            v2.ID = "v2";
+                            verts.Add(v2);
+                            break;
+                        }
+                    case 3:
+                        {
+                            Vertex2D v3 = new Vertex2D(Pointslist[i], Pointslist[i - 1], h1); // 4-3 vector
+                            v3.ID = "v3";
+                            verts.Add(v3);
+                            break;
+                        }
+                    case 4:
+                        {
+                            break;
+                        }
+
+                }
+
+
+            }
+            foreach (Vertex2D v in verts)
+            {
+                if (v.Orientation == "Horizontal") { v.Length = Width; }
+                else if (v.Orientation == "Vertical") { v.Length = Length; }
+            }
+            Vertixes = verts;
+
+
+            Rotationallowance.Add("XY", false);
+
+        }
+    }
+
+    public override string ToString()
+    {
+        return $"L: {Length.ToString().PadRight(4)}; W: {Width.ToString().PadRight(4)}; ID: {Indexes["Instance"].ToString().PadRight(5)} Loaded: {IsLoaded.ToString().PadRight(5)}";
+    }
+
+    //Methods related to packages
+    public void Rotationallowancedisplay()
+    {
+        foreach (var v in Rotationallowance)
+        {
+            Console.WriteLine($"{v.Key}: {v.Value}");
+        }
+
+    }
+    public String SeparatedFormat(char Separator)
+    {
+        string output = $"{Length + Separator + Width + Separator + Indexes["Instance"]}"; //index given in the literature instance
+        return output;
+    }
+    public void OverwritePosition(int X, int Y, int index)//assign all the points coordinates with one coordinate given
+    {
+        int i = index;
+        int p1 = 0;
+        int p2 = 0;
+
+        List<int> roundslist = new List<int>();
+        List<Point2D> Plistcopy = Pointslist.ToList();
+        if (Plistcopy[i - 1].Index == i)
+        {
+
+            Plistcopy[i - 1].X = X; Plistcopy[i - 1].Y = Y;
+        }
+        else
+        {
+            //Console.WriteLine($"index {i} does not overlap with the index of the point in plistcopy ");
+        }
+        List<Vertex2D> Vlistcopy = Vertixes.ToList();
+        Connectionfinder(index, out p1, out p2, ref Vlistcopy, ref Plistcopy); //round 1 with the given initial index
+        roundslist.Add(p1); roundslist.Add(p2);
+        int p3 = 0; int p4 = 0;
+        foreach (int v in roundslist)
+        {
+            if (v > 0)
+
+            {
+                Connectionfinder(v, out p3, out p4, ref Vlistcopy, ref Plistcopy); //round 2 with p1,p2 note that these 2 points can only find 2 new points in total (make a diagram and see)
+            }
+
+
+        }
+        Pointslist = Plistcopy;
+        Constructnewvertixes();
+
+    }
+    public void Connectionfinder(int index, out int p1, out int p2, ref List<Vertex2D> Vlistcopy, ref List<Point2D> Plistcopy) //every point is connected to three points. here we check if there are any connections to explore and points to assign. 
+    {
+        p1 = 0;
+        p2 = 0;
+
+
+        if (Vlistcopy.Count > 0 && ((p1 == 0) && (p2 == 0)))
+        {
+            foreach (Vertex2D v in Vlistcopy.ToList()) //check all the vertices remaining
+            {
+                if (v.P1.Index == index) //find out if our assignment point is sending or recieving the vector, p1 is sender p2 is receiver
+                {
+
+                    if (v.Orientation == "Vertical")//if the connection is vertical we add the height
+                    {
+                        Plistcopy[v.P2.Index - 1].X = Plistcopy[index - 1].X;
+                        Plistcopy[v.P2.Index - 1].Y = Plistcopy[index - 1].Y + Length;
+
+
+                        if (p1 == 0) { p1 = v.P2.Index; } //if there is an unassigned index left assign it
+                        else if (p2 == 0) { p2 = v.P2.Index; }
+
+
+                        Vlistcopy.Remove(v); //remove the connection of the two points
+
+                    }
+
+                    else if (v.Orientation == "Horizontal")
+                    {
+                        Plistcopy[v.P2.Index - 1].X = Plistcopy[index - 1].X + Width;
+                        Plistcopy[v.P2.Index - 1].Y = Plistcopy[index - 1].Y;
+
+                        if (p1 == 0) { p1 = v.P2.Index; }
+                        else if (p2 == 0) { p2 = v.P2.Index; }
+
+
+                        Vlistcopy.Remove(v);
+
+                    }
+
+                }
+                else if (v.P2.Index == index)
+                {
+
+                    if (v.Orientation == "Vertical")//if the connection is vertical we add the height
+                    {
+                        Plistcopy[v.P1.Index - 1].X = Plistcopy[index - 1].X;
+                        Plistcopy[v.P1.Index - 1].Y = Plistcopy[index - 1].Y - Length;
+
+                        if (p1 == 0) { p1 = v.P1.Index; } //if there is an unassigned index left assign it
+                        else if (p2 == 0) { p2 = v.P1.Index; }
+
+
+                        Vlistcopy.Remove(v); //remove the connection of the two points
+
+                    }
+
+                    else if (v.Orientation == "Horizontal")
+                    {
+                        Plistcopy[v.P1.Index - 1].X = Plistcopy[index - 1].X - Width;
+                        Plistcopy[v.P1.Index - 1].Y = Plistcopy[index - 1].Y;
+
+                        if (p1 == 0) { p1 = v.P1.Index; }
+                        else if (p2 == 0) { p2 = v.P1.Index; }
+
+
+                        Vlistcopy.Remove(v);
+
+                    }
+
+                }
+                else if (!(v.P2.Index == index) && !(v.P2.Index == index))//if a Vertex2D does not contain the point we move on. 
+                {
+                    continue;
+                }
+            }
+        }
+        return; //eventually in the 2nd run there should be no vertices left and all points assigned. 
+
+    }
+    public void Rotate() //note only 90 degree turns are possible, no diagonals. 
+    {
+
+        if ((Rotationallowance.ContainsKey("XY")) && (Rotationallowance["XY"] = true))
+        {
+            int temporary = Width;
+            Width = Length;
+            Length = temporary; //saved as temp variable 
+            OverwritePosition(Pointslist[0].X, Pointslist[0].Y, Pointslist[0].Index); //refreshes with new dimensions
+        }
+        //else if (!Rotationallowance.ContainsKey("XY"))
+        //{ Console.WriteLine("error while turning: rotation allowance key missing"); }
+
+
+
+        return;
+    }
+
+    public void Constructnewvertixes()
+    {
+        List<Vertex2D> verts = new List<Vertex2D>();
+        for (int i = 1; i <= 4; i++)
+        {
+            string h1 = "Horizontal";
+            string h2 = "Vertical";
+
+            switch (i) //indicate also direction as a vector for later calculation using vertices
+            {
+                case 1:
+                    {
+                        Vertex2D v1 = new Vertex2D(Pointslist[i - 1], Pointslist[i], h1); // 1-2
+                        Vertex2D v4 = new Vertex2D(Pointslist[i - 1], Pointslist[i + 2], h2); //1-4
+                        v1.ID = "v1";
+                        v4.ID = "v4";
+                        verts.Add(v1); verts.Add(v4);
+                        break;
+                    }
+                case 2:
+                    {
+                        Vertex2D v2 = new Vertex2D(Pointslist[i - 1], Pointslist[i], h2); // 2-3
+                        v2.ID = "v2";
+                        verts.Add(v2);
+                        break;
+                    }
+                case 3:
+                    {
+                        Vertex2D v3 = new Vertex2D(Pointslist[i], Pointslist[i - 1], h1); // 4-3 vector
+                        v3.ID = "v3";
+                        verts.Add(v3);
+                        break;
+                    }
+                case 4:
+                    {
+                        break;
+                    }
+
+            }
+
+
+        }
+        foreach (Vertex2D v in verts)
+        {
+            if (v.Orientation == "Horizontal") { v.Length = Width; }
+            else if (v.Orientation == "Vertical") { v.Length = Length; }
+        }
+        Vertixes = verts;
+
+
+        return;
+
+    }
+    public void ResetDimensions()
+    {
+        Length = LengthOG;
+        Width = WidthOG;
+
+        return;
+
+    }
+}
+public class ExtremePoint : Point2D
+{
+    public List<Rule> Space = new List<Rule>(); //rules created from the chosen vertices
+    public List<Vertex2D> Spatial_Vertices = new List<Vertex2D>(); //chosen vertices for the space
+    public Package2D Initial_Space { get; set; }
+    public ExtremePoint(int maxdim, int x, int y, int index) : base(x, y, index)
+    {
+        Package2D initial = new Package2D(maxdim, maxdim);
+        Initial_Space = initial;
+
+    }
+    public void Create_Space(List<Vertex2D> relevantvertices) //create rules for the packages
+    {
+        foreach (Vertex2D v in relevantvertices)
+        {
+            Rule r = new Rule(v, this);
+            Space.Add(r);
+        }
+        return;
+    }
+    public bool Fitsinspace2(List<Point2D> points) //pass all points of package to see if they fit
+    {
+        bool fits = true;
+        foreach (Rule r in Space)
+        {
+            bool loopover = r.TestPoints(points);
+            if (loopover == false) { fits = false; break; }
+        }
+        return fits;
+    }
+}
+
+public class Rule
+{
+    public Vertex2D Rulevertex { get; set; }
+    public ExtremePoint RulePoint { get; set; }
+    public bool TestPoints(List<Point2D> points)
+    {
+        bool tester = true;
+        foreach (Point2D p in points)
+        {
+            if (Rulevertex.Orientation == "Horizontal")
+            {
+                if (RulePoint.Y < Rulevertex.P1.Y)
+                {
+                    if (Rulevertex.P1.X <= p.X && p.X <= Rulevertex.P2.X)
+                    {
+                        if (Rulevertex.P1.Y < p.Y)
+                        {
+                            tester = false;
+                        }
+                    }
+
+                }
+            }
+            else if (Rulevertex.Orientation == "Vertical")
+            {
+                if (RulePoint.X < Rulevertex.P1.X)
+                {  
+                    if(Rulevertex.P1.Y<= p.Y && p.Y <= Rulevertex.P2.Y)
+                    {
+                        if(Rulevertex.P1.X < p.X)
+                        {
+                            tester= false;
+                        }
+                    }
+
+                }
+            }
+
+        }
+
+        return tester;
+    }
+    public Rule(Vertex2D v, ExtremePoint p)
+    {
+        Rulevertex = v;
+        RulePoint = p;
+    }
+}
+public class Point2D
+{
+
+    public int X { get; set; }
+    public int Y { get; set; }
+
+    public int Index { get; set; }
+
+
+    public Point2D(int x, int y, int index)
+    {
+        X = x;
+        Y = y;
+
+        Index = index;
+
+
+    }
+    public override string ToString()
+    {
+        return $"X: {X.ToString().PadLeft(3)} Y: {Y.ToString().PadLeft(3)} Index: P{Index}";
+    }
+}
+
+
+public class Vertex2D
+{
+    public Point2D P1 { get; set; }
+    public Point2D P2 { get; set; }
+    public double Length { get; set; }
+    public string Orientation { get; set; }
+    public string ID { get; set; }
+    public Vertex2D(Point2D p1, Point2D p2, string orientation)
+    {
+        P1 = p1;
+        P2 = p2;
+        Orientation = orientation;
+
+    }
+    public override string ToString()
+    {
+        return $"P1: {P1.Index}; P2: {P2.Index}; Length: {Length}; Orientation: {Orientation}; ID: {ID}";
+    }
+
+}
+
+
+
+
+
