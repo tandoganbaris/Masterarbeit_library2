@@ -10,8 +10,23 @@ namespace Masterarbeit_library2;
 public class Package2D
 {
 
+
+
+    //    4-------v3-------3
+    //    |                |
+    //    |                |
+    //    v4               v2
+    //    |                |
+    //    |                | 
+    //    1-------v1-------2
+
+    // length is Y
+    // width  is X 
+
+
+
     public int Length { get; set; } //x
-    public int LengthOG { get; set; }
+    public int LengthOG { get; set; } //OG refers to original for resetting
     public int Width { get; set; } //y
     public int WidthOG { get; set; }
     public double Weight { get; set; }
@@ -25,7 +40,7 @@ public class Package2D
 
     public int Volume { get; set; }
 
-    public Dictionary<string, bool> Rotationallowance { get; set; } = new Dictionary<string, bool>(); //YZ , XZ, XY 
+    public Dictionary<string, bool> Rotationallowance { get; set; } = new Dictionary<string, bool>(); // XY 
 
     public List<Point2D> Pointslist { get; set; }
     public List<Vertex2D> Vertixes { get; set; } = new List<Vertex2D>();
@@ -318,6 +333,16 @@ public class Package2D
         return;
 
     }
+    public void ResetPositions()
+    {
+        foreach(Point2D p in Pointslist)
+        {
+            p.X = 0; p.Y = 0;
+        }
+        Constructnewvertixes();
+        return;
+
+    }
 }
 public class ExtremePoint : Point2D
 {
@@ -339,6 +364,20 @@ public class ExtremePoint : Point2D
         }
         return;
     }
+    public bool Fitsinspace1(List<Point2D> points) //pass all points of package to see if they fit
+                                                   //with max value this is useless.
+                                                   //can be used as trigger to expand space if another dimension is chosen
+    {
+        bool fits = true;
+        foreach (Point2D p in points)
+        {
+            Vertex2D v2 = Initial_Space.Vertixes.Where(x => x.ID == "v2").ToList()[0];
+            Vertex2D v3 = Initial_Space.Vertixes.Where(x => x.ID == "v3").ToList()[0];
+            if (p.X > v2.P1.X) { fits = false; }
+            if (p.Y > v3.P1.Y) { fits = false; }
+        }
+        return fits;
+    }
     public bool Fitsinspace2(List<Point2D> points) //pass all points of package to see if they fit
     {
         bool fits = true;
@@ -359,34 +398,40 @@ public class Rule
     {
         bool tester = true;
         foreach (Point2D p in points)
+
         {
-            if (Rulevertex.Orientation == "Horizontal")
+            switch (Rulevertex.Orientation)
             {
-                if (RulePoint.Y < Rulevertex.P1.Y)
-                {
-                    if (Rulevertex.P1.X <= p.X && p.X <= Rulevertex.P2.X)
+                case "Horizontal":
                     {
-                        if (Rulevertex.P1.Y < p.Y)
+                        if (RulePoint.Y < Rulevertex.P1.Y) //dummy
                         {
-                            tester = false;
-                        }
-                    }
+                            if (Rulevertex.P1.X <= p.X && p.X <= Rulevertex.P2.X)
+                            {
+                                if (Rulevertex.P1.Y < p.Y) //if point is outside
+                                {
+                                    tester = false;
+                                }
+                            }
 
-                }
-            }
-            else if (Rulevertex.Orientation == "Vertical")
-            {
-                if (RulePoint.X < Rulevertex.P1.X)
-                {  
-                    if(Rulevertex.P1.Y<= p.Y && p.Y <= Rulevertex.P2.Y)
+                        }
+                        break;
+                    }
+                case "Vertical":
                     {
-                        if(Rulevertex.P1.X < p.X)
+                        if (RulePoint.X < Rulevertex.P1.X) //dummy
                         {
-                            tester= false;
-                        }
-                    }
+                            if (Rulevertex.P1.Y <= p.Y && p.Y <= Rulevertex.P2.Y)
+                            {
+                                if (Rulevertex.P1.X < p.X) //if point is outside
+                                {
+                                    tester = false;
+                                }
+                            }
 
-                }
+                        }
+                        break;
+                    }
             }
 
         }
@@ -426,6 +471,10 @@ public class Point2D
 
 public class Vertex2D
 {
+    //if horizontal p1.x < p2.x
+    //if vertical p1.y < p2.y
+    //usually has id to indicate which vertex it represented in a package, but for future sorting can be changed
+
     public Point2D P1 { get; set; }
     public Point2D P2 { get; set; }
     public double Length { get; set; }
