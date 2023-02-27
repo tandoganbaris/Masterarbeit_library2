@@ -335,7 +335,7 @@ public class Package2D
     }
     public void ResetPositions()
     {
-        foreach(Point2D p in Pointslist)
+        foreach (Point2D p in Pointslist)
         {
             p.X = 0; p.Y = 0;
         }
@@ -349,19 +349,150 @@ public class ExtremePoint : Point2D
     public List<Rule> Space = new List<Rule>(); //rules created from the chosen vertices
     public List<Vertex2D> Spatial_Vertices = new List<Vertex2D>(); //chosen vertices for the space
     public Package2D Initial_Space { get; set; }
+    public bool Used { get; set; } = false;
+    public List<string> Errorlog { get; set; } = new List<string>();
     public ExtremePoint(int maxdim, int x, int y, int index) : base(x, y, index)
     {
         Package2D initial = new Package2D(maxdim, maxdim);
         Initial_Space = initial;
 
     }
-    public void Create_Space(List<Vertex2D> relevantvertices) //create rules for the packages
+    public void Create_Space(List<Vertex2D> relevantvertices) //create rules for the packages, need to pass relevant vertices
+
+    //must figure out a way to add real part to the v1 and v4 
     {
-        foreach (Vertex2D v in relevantvertices)
+        Extreme_Algorithms algo = new Extreme_Algorithms();
+        if (relevantvertices.Count > 0) //there must be some vertices as we dont load in the air
         {
-            Rule r = new Rule(v, this);
-            Space.Add(r);
+            bool realv2 = false;//in case the v1 and v4 are perfectly covered, the reality of v2 and v3 come into question
+            bool realv3 = false;
+            Vertex2D v1 = Initial_Space.Vertixes.Where(x => x.ID == "v1").ToList()[0];
+            Vertex2D v2 = Initial_Space.Vertixes.Where(x => x.ID == "v2").ToList()[0]; Space.Add(new Rule(v2, this));
+            Vertex2D v3 = Initial_Space.Vertixes.Where(x => x.ID == "v3").ToList()[0]; Space.Add(new Rule(v3, this));
+            Vertex2D v4 = Initial_Space.Vertixes.Where(x => x.ID == "v4").ToList()[0];
+            List<Vertex2D> relevanthorizontal = algo.Fetchcollinear_vertices(relevantvertices,v1, "Horizontal");
+            List<Vertex2D> relevantvertical = algo.Fetchcollinear_vertices(relevantvertices, v4, "Vertical");
+            if (relevanthorizontal.Count > 1 | relevantvertical.Count > 1) { Errorlog.Add("Multiple vertices crossing Epoint"); return; } //should only be one vertex in each direction
+            //VERTEX 1 Real
+            if ((relevanthorizontal[0].P2.X >= v1.P2.X) && (relevanthorizontal[0].P1.X <= v1.P1.X))//1
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
+                new Tuple<Point2D, Point2D>(v1.P1, v1.P2);
+                if (relevanthorizontal[0].P2.X == v1.P2.X) { realv2 = true; }
+            }
+            else if ((relevanthorizontal[0].P2.X < v1.P2.X) && (relevanthorizontal[0].P1.X <= v1.P1.X))//2
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
+                new Tuple<Point2D, Point2D>(v1.P1, relevanthorizontal[0].P2);
+            }
+            else if ((relevanthorizontal[0].P2.X >= v1.P2.X) && (relevanthorizontal[0].P1.X >= v1.P1.X))//3
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
+                new Tuple<Point2D, Point2D>(relevanthorizontal[0].P1, v1.P2);
+            }
+            else if ((relevanthorizontal[0].P2.X < v1.P2.X) && (relevanthorizontal[0].P1.X >= v1.P1.X))//4
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
+                new Tuple<Point2D, Point2D>(relevanthorizontal[0].P1, relevanthorizontal[0].P2);
+            }
+            else if (relevanthorizontal.Count == 0)
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
+                    new Tuple<Point2D, Point2D>(new Point2D(0, 0, 0), new Point2D(0, 0, 0));
+            }
+            //VERTEX 4 Real
+            if ((relevantvertical[0].P2.Y >= v4.P2.Y) && (relevantvertical[0].P1.Y <= v4.P1.Y)) //1
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v4").First().Realsection =
+                new Tuple<Point2D, Point2D>(v4.P1, v4.P2);
+                if (relevantvertical[0].P2.Y == v4.P2.Y) { realv3 = true; }
+            }
+            else if ((relevantvertical[0].P2.Y < v4.P2.Y)&& (relevantvertical[0].P1.Y <= v4.P1.Y))//2
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v4").First().Realsection =
+                new Tuple<Point2D, Point2D>(v4.P1, relevantvertical[0].P2);
+            }
+            else if ((relevantvertical[0].P2.Y >= v4.P2.Y) && (relevantvertical[0].P1.Y >= v4.P1.Y))//3
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v4").First().Realsection =
+                new Tuple<Point2D, Point2D>(relevantvertical[0].P1, v4.P2);
+            }
+            else if ((relevantvertical[0].P2.Y < v4.P2.Y) && (relevantvertical[0].P1.Y >= v4.P1.Y))//4
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v4").First().Realsection =
+                new Tuple<Point2D, Point2D>(relevantvertical[0].P1, relevantvertical[0].P2);
+            }
+            else if (relevantvertical.Count == 0)
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v4").First().Realsection =
+                    new Tuple<Point2D, Point2D>(new Point2D(0, 0, 0), new Point2D(0, 0, 0));
+            }
+
+            //all the other vertices
+
+            foreach (Vertex2D v in relevantvertices) //note that rules omit collinearity 
+            {
+                Rule r = new Rule(v, this);
+                Space.Add(r);
+            }
+            if (realv2)
+            {
+                List<Vertex2D> relevantverticalv2 = algo.Fetchcoincident_vertices(relevantvertices, v1.P2, "Vertical");
+                if (relevantverticalv2.Count > 1) { Errorlog.Add("Multiple vertices crossing Epoint"); return; }
+                if (relevantverticalv2[0].P2.Y >= v2.P2.Y)
+                {
+                    Initial_Space.Vertixes.Where(x => x.ID == "v2").First().Realsection =
+                    new Tuple<Point2D, Point2D>(v2.P1, v2.P2);
+
+                }
+                else if (relevantverticalv2[0].P2.Y < v2.P2.Y)
+                {
+                    Initial_Space.Vertixes.Where(x => x.ID == "v2").First().Realsection =
+                    new Tuple<Point2D, Point2D>(v2.P1, relevantverticalv2[0].P2);
+                }
+                else if (relevantverticalv2.Count == 0)
+                {
+                    Initial_Space.Vertixes.Where(x => x.ID == "v2").First().Realsection =
+                        new Tuple<Point2D, Point2D>(new Point2D(0, 0, 0), new Point2D(0, 0, 0));
+                }
+
+            }
+            else
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v2").First().Realsection =
+                        new Tuple<Point2D, Point2D>(new Point2D(0, 0, 0), new Point2D(0, 0, 0));
+            }
+
+
+            if (realv3)
+            {
+                List<Vertex2D> relevanthorizontalv3 = algo.Fetchcoincident_vertices(relevantvertices, v4.P2, "Horizontal");
+                if (relevanthorizontalv3.Count > 1) { Errorlog.Add("Multiple vertices crossing Epoint"); return; }
+                if (relevanthorizontalv3[0].P2.X >= v3.P2.X)
+                {
+                    Initial_Space.Vertixes.Where(x => x.ID == "v3").First().Realsection =
+                    new Tuple<Point2D, Point2D>(v3.P1, v3.P2);
+        
+                }
+                else if (relevanthorizontalv3[0].P2.X < v3.P2.X)
+                {
+                    Initial_Space.Vertixes.Where(x => x.ID == "v3").First().Realsection =
+                    new Tuple<Point2D, Point2D>(v3.P1, relevanthorizontalv3[0].P2);
+                }
+                else if (relevanthorizontalv3.Count == 0)
+                {
+                    Initial_Space.Vertixes.Where(x => x.ID == "v3").First().Realsection =
+                        new Tuple<Point2D, Point2D>(new Point2D(0, 0, 0), new Point2D(0, 0, 0));
+                }
+            }
+            else
+            {
+                Initial_Space.Vertixes.Where(x => x.ID == "v3").First().Realsection =
+                        new Tuple<Point2D, Point2D>(new Point2D(0, 0, 0), new Point2D(0, 0, 0));
+            }
         }
+        else { Errorlog.Add("No relevant vertices found (impossible normally)"); }
+
         return;
     }
     public bool Fitsinspace1(List<Point2D> points) //pass all points of package to see if they fit
@@ -381,10 +512,13 @@ public class ExtremePoint : Point2D
     public bool Fitsinspace2(List<Point2D> points) //pass all points of package to see if they fit
     {
         bool fits = true;
-        foreach (Rule r in Space)
+        if (Space.Count > 0)
         {
-            bool loopover = r.TestPoints(points);
-            if (loopover == false) { fits = false; break; }
+            foreach (Rule r in Space)
+            {
+                bool loopover = r.TestPoints(points);
+                if (loopover == false) { fits = false; break; }
+            }
         }
         return fits;
     }
@@ -404,7 +538,7 @@ public class Rule
             {
                 case "Horizontal":
                     {
-                        if (RulePoint.Y < Rulevertex.P1.Y) //dummy
+                        if (RulePoint.Y < Rulevertex.P1.Y) //excludes collinear vertices
                         {
                             if (Rulevertex.P1.X <= p.X && p.X <= Rulevertex.P2.X)
                             {
@@ -419,7 +553,7 @@ public class Rule
                     }
                 case "Vertical":
                     {
-                        if (RulePoint.X < Rulevertex.P1.X) //dummy
+                        if (RulePoint.X < Rulevertex.P1.X) //excludes collinear vertices 
                         {
                             if (Rulevertex.P1.Y <= p.Y && p.Y <= Rulevertex.P2.Y)
                             {
@@ -477,6 +611,9 @@ public class Vertex2D
 
     public Point2D P1 { get; set; }
     public Point2D P2 { get; set; }
+
+    public Tuple<Point2D, Point2D> Realsection { get; set; }
+    public Tuple<Point2D, Point2D> Exposedsection { get; set; }
     public double Length { get; set; }
     public string Orientation { get; set; }
     public string ID { get; set; }
