@@ -1,7 +1,10 @@
 ﻿using Google.OrTools.ConstraintSolver;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,7 +30,7 @@ public class Extreme_Algorithms
 
 
 
-    private List<Vertex2D> Fetchrelevant_vertices(ExtremePoint E) //returns vertices inside the packing space.
+    public List<Vertex2D> Fetchrelevant_vertices(ExtremePoint E) //returns vertices inside the packing space.
     {
         //Right side in: the right side of the vertex is within the bounds while the left point is outside
         //left side in: the left side of the vertex is within the bounds while the right point is outside
@@ -184,6 +187,68 @@ public class Extreme_Algorithms
 
         return foundvertices;
     }
+    public Vertex2D Fetchcrossover_vertex_nearest(List<Vertex2D> verticestoconsider, Vertex2D vertexin, Point2D nearestothis) //returns vertices that cross over perpendicular
+    {
+        List<Vertex2D> foundvertices = new List<Vertex2D>();
+        List<Vertex2D> relevantvertices = new List<Vertex2D>();
+        Vertex2D v_out = new Vertex2D(new Point2D(0, 0, 0), new Point2D(0, 0, 0), vertexin.Orientation);
+        if (vertexin.Orientation == "Horizontal") { relevantvertices = verticestoconsider.Where(x => x.Orientation == "Vertical").ToList(); }
+        else if (vertexin.Orientation == "Vertical") { relevantvertices = verticestoconsider.Where(x => x.Orientation == "Horizontal").ToList(); }
+        foreach (Vertex2D v in relevantvertices)
+        {
+            switch (v.Orientation)
+            {
+                case "Horizontal":
+                    {
+                        if ((v.P1.Y < nearestothis.Y) &&
+                            (v.P1.Y >= vertexin.P1.Y) &&
+                            (v.P1.X <= nearestothis.X) &&
+                            (v.P2.X >= nearestothis.X))
+                        { //within the vertical bounds and crossing over 
+
+                            foundvertices.Add(v);
+                        }
+                        else { continue; }
+                        break;
+                    }
+                case "Vertical":
+                    {
+                        if ((v.P2.X < nearestothis.X) &&
+                             (v.P1.X >= vertexin.P1.X) &&
+                             (v.P1.Y <= nearestothis.Y) &&
+                             (v.P2.Y >= nearestothis.Y))
+                        { //within the horizontal bounds and crossing over 
+
+                            foundvertices.Add(v);
+                        }
+                        else { continue; }
+                        break;
+
+                    }
+
+
+            }
+
+        }
+        switch (relevantvertices[0].Orientation)
+        {
+            case "Horizontal":
+                {
+                    relevantvertices = relevantvertices.OrderByDescending(x => x.P1.Y).ToList();
+                    break;
+                }
+            case "Vertical":
+                {
+                    relevantvertices = relevantvertices.OrderByDescending(x => x.P1.X).ToList();
+                    break;
+                }
+        }
+        v_out = relevantvertices[0];
+
+
+
+        return v_out;
+    }
     public void Refresh_ExtremePoints(Package2D p, ExtremePoint chosen)
     //first refresh then load as it can cause confusion with vertices
     {
@@ -212,7 +277,16 @@ public class Extreme_Algorithms
                         verticesofpoint = Fetchcoincident_vertices(verticestoconsider, e, "Vertical").ToList();
                         Vertex2D v2 = p.Vertixes.Where(x => x.ID == "v2").ToList()[0];
                         if (verticesofpoint.Count > 1) { Errorlog.Add($"Merge Error: too many overlapping vertixes with same direction over point {e}"); break; }
-                        else if (verticesofpoint.Count == 0) { ActiveExtremePoints.Add(e); verticestoconsider.Add(v2); }//if not on an existing vertex add to extreme points
+                        else if (verticesofpoint.Count == 0)
+                        { //add shadows here
+                            Vertex2D E_v1 = chosen.Initial_Space.Vertixes.Where(x => x.ID == "v1").ToList()[0];
+                            if (E_v1.Realsection.Item2.X < v2.P1.X) //hanging
+                            {
+                                ExtremePoint ShadowVertical = ShadowPoint(p, chosen, v2.Orientation);
+                                if (ShadowVertical.Index != 1000) { ActiveExtremePoints.Add(ShadowVertical); }
+                            }
+                            ActiveExtremePoints.Add(e); verticestoconsider.Add(v2);
+                        }//if not on an existing vertex add to extreme points
 
 
                         Vertex2D newvert = MergeVertices(verticesofpoint[0], v2);
@@ -226,7 +300,16 @@ public class Extreme_Algorithms
                         verticesofpoint = Fetchcoincident_vertices(verticestoconsider, e, "Horizontal").ToList();
                         Vertex2D v3 = p.Vertixes.Where(x => x.ID == "v3").ToList()[0];
                         if (verticesofpoint.Count > 1) { Errorlog.Add($"Merge Error: too many overlapping vertixes with same direction over point {e}"); break; }
-                        else if (verticesofpoint.Count == 0) { ActiveExtremePoints.Add(e); verticestoconsider.Add(v3); }//if not on an existing vertex add to extreme points
+                        else if (verticesofpoint.Count == 0)
+                        {
+                            Vertex2D E_v4 = chosen.Initial_Space.Vertixes.Where(x => x.ID == "v4").ToList()[0];
+                            if (E_v4.Realsection.Item2.Y < v3.P1.Y) //stepping up
+                            {
+                                ExtremePoint ShadowVertical = ShadowPoint(p, chosen, v3.Orientation);
+                                if (ShadowVertical.Index != 1000) { ActiveExtremePoints.Add(ShadowVertical); }
+                            }
+                            ActiveExtremePoints.Add(e); verticestoconsider.Add(v3);
+                        }//if not on an existing vertex add to extreme points
 
                         Vertex2D newvert = MergeVertices(verticesofpoint[0], v3);
                         if (newvert.P2.X == 0 && newvert.P2.Y == 0) { Errorlog.Add($"Merge Error between: {verticesofpoint[0]} and {v3}"); }
@@ -248,7 +331,7 @@ public class Extreme_Algorithms
             Vertex2D E_v1_real = new Vertex2D(E_v1.Realsection.Item1, E_v1.Realsection.Item2, E_v1.Orientation);
 
             List<Vertex2D> ContainsE_v1_real = Fetchcollinear_vertices(verticestoconsider, E_v1_real, E_v1_real.Orientation).ToList();
-            if (v1.P2.X > E_v1_real.P2.X)
+            if (v1.P2.X > E_v1_real.P2.X) //hanging over
             {
 
                 if (ContainsE_v1_real.Count > 0)
@@ -256,64 +339,75 @@ public class Extreme_Algorithms
                     foreach (Vertex2D vexists in ContainsE_v1_real.ToList())
                     {
                         Vertex2D deducted = DeductVertices(vexists, E_v1_real);
-                        verticestoconsider.Remove(vexists);
-                        verticestoconsider.Add(deducted);
+                        if (deducted.P2.X == 0 && deducted.P2.Y == 0) { continue; } //if the deduction totally removes the existing vertex we dont add any
+                        else { verticestoconsider.Add(deducted); } //else we add the shorter vertex output
+                        verticestoconsider.Remove(vexists); //in any case we remove the vertex 
                     }
                 }
                 Vertex2D hangingside = DeductVertices(v1, E_v1_real);
                 verticestoconsider.Add(hangingside);
 
-
             }
-        }
-        else //this shouldnt even be entered as any collinear vertex should have been in the real section of the space vertex
-        {
-            List<Vertex2D> Contains_v1 = Fetchcollinear_vertices(verticestoconsider, v1, v1.Orientation).ToList();
-            if (Contains_v1.Count > 0)
+
+            else if (v1.P2.X <= E_v1_real.P2.X) //not hanging over
             {
-
+                List<Vertex2D> Contains_v1 = Fetchcollinear_vertices(verticestoconsider, v1, v1.Orientation).ToList();
+                if (Contains_v1.Count > 0)
+                {
+                    foreach (Vertex2D vexists in Contains_v1.ToList())
+                    {
+                        Vertex2D deducted = DeductVertices(vexists, v1);
+                        if (deducted.P2.X == 0 && deducted.P2.Y == 0) { continue; } //if the deduction totally removes the existing vertex we dont add any
+                        else { verticestoconsider.Add(deducted); } //else we add the shorter vertex output
+                        verticestoconsider.Remove(vexists); //in any case we remove the vertex 
+                    }
+                }
             }
-
         }
 
         Vertex2D v4 = p.Vertixes.Where(x => x.ID == "v4").ToList()[0];
         Vertex2D E_v4 = chosen.Initial_Space.Vertixes.Where(x => x.ID == "v4").ToList()[0];
-        Vertex2D E_v4_real = new Vertex2D(E_v4.Realsection.Item1, E_v4.Realsection.Item2, E_v4.Orientation);
-        List<Vertex2D> ContainsE_v4_real = Fetchcollinear_vertices(verticestoconsider, E_v4_real, E_v4_real.Orientation).ToList();
-        if (v4.P2.Y > E_v4_real.P2.Y)
+        if (E_v4.Realsection.Item1.Index != 0 | E_v4.Realsection.Item2.Index != 0)
         {
-
-            if (ContainsE_v4_real.Count > 0)
+            Vertex2D E_v4_real = new Vertex2D(E_v4.Realsection.Item1, E_v4.Realsection.Item2, E_v4.Orientation);
+            List<Vertex2D> ContainsE_v4_real = Fetchcollinear_vertices(verticestoconsider, E_v4_real, E_v4_real.Orientation).ToList();
+            if (v4.P2.Y > E_v4_real.P2.Y)
             {
-                foreach (Vertex2D vexists in ContainsE_v4_real.ToList())
+
+                if (ContainsE_v4_real.Count > 0)
                 {
-                    Vertex2D deducted = DeductVertices(vexists, E_v4_real);
-                    verticestoconsider.Remove(vexists);
-                    verticestoconsider.Add(deducted);
+                    foreach (Vertex2D vexists in ContainsE_v4_real.ToList())
+                    {
+                        Vertex2D deducted = DeductVertices(vexists, E_v4_real);
+                        if (deducted.P2.X == 0 && deducted.P2.Y == 0) { continue; }
+                        else { verticestoconsider.Add(deducted); }
+                        verticestoconsider.Remove(vexists);
+
+                    }
                 }
+                Vertex2D stepup = DeductVertices(v4, E_v4_real);
+                verticestoconsider.Add(stepup);
+
+
+
             }
-            Vertex2D stepup = DeductVertices(v4, E_v4_real);
-            verticestoconsider.Add(stepup);
- 
-
-        }
-
-
-
-
-
-        List<Vertex2D> relevantverticesv1 = Fetchcollinear_vertices(verticestoconsider, v1, "Vertical");
-        if (relevantverticesv1.Count > 0)
-        {
-            foreach (Vertex2D v in relevantverticesv1)
+            else if(v4.P2.Y <= E_v4_real.P2.Y)
             {
-                v1 = MergeVertices(v1, v);
-                verticestoconsider.Remove(v);
+                List<Vertex2D> Contains_v4 = Fetchcollinear_vertices(verticestoconsider, v4, v4.Orientation).ToList();
+                if (Contains_v4.Count > 0)
+                {
+                    foreach (Vertex2D vexists in Contains_v4.ToList())
+                    {
+                        Vertex2D deducted = DeductVertices(vexists, v4);
+                        if (deducted.P2.X == 0 && deducted.P2.Y == 0) { continue; } //if the deduction totally removes the existing vertex we dont add any
+                        else { verticestoconsider.Add(deducted); } //else we add the shorter vertex output
+                        verticestoconsider.Remove(vexists); //in any case we remove the vertex 
+                    }
+                }
+
             }
         }
-
-
-
+       
 
         //irrelevant vertices must not be considered. 
         //if v1 hangs over E.Space v1 then the difference must be a vertex
@@ -326,7 +420,7 @@ public class Extreme_Algorithms
     public Vertex2D MergeVertices(Vertex2D v1, Vertex2D v2) //(existing,entering)
     {
         Vertex2D v_out = new Vertex2D(new Point2D(0, 0, 0), new Point2D(0, 0, 0), v1.Orientation); //dummy rn
-        if (v1.Orientation != v2.Orientation) { Errorlog.Add($"Merge Error between: {v1} and {v2} due to orientation unmatch"); }
+        if (v1.Orientation != v2.Orientation) { Errorlog.Add($"Merge Error between: {v1} and {v2} due to orientation mismatch"); }
         switch (v1.Orientation)
         {
             case "Vertical":
@@ -376,7 +470,7 @@ public class Extreme_Algorithms
 
         return v_out;
     }
-    public Vertex2D DeductVertices(Vertex2D v1, Vertex2D v2) //(existing, removing) //returns either shorter vertex or Null 
+    public Vertex2D DeductVertices(Vertex2D v1, Vertex2D v2) //(existing, removing) //returns either shorter vertex v1 or Null 
     {
         Vertex2D v_out = new Vertex2D(new Point2D(0, 0, 0), new Point2D(0, 0, 0), v1.Orientation); //dummy rn
         if (v1.Orientation != v2.Orientation) { Errorlog.Add($"Deduct Error between: {v1} and {v2} due to orientation unmatch"); }
@@ -461,10 +555,120 @@ public class Extreme_Algorithms
 
         return v_out;
     }
+    public ExtremePoint ShadowPoint(Package2D p, ExtremePoint chosen, string caseorientation)
+    {
+        ExtremePoint Epoint = new ExtremePoint(Chosen_maxdim, 0, 0, 1000); //dummy
+        switch (caseorientation)
+        {
+            case "Vertical": //dropping down
+                {
+
+                    Vertex2D v2 = p.Vertixes.Where(x => x.ID == "v2").ToList()[0];
+                    Point2D P2 = v2.P1;
+                    if (P2.Y - Chosen_maxdim < 0) //under the borders
+                    { v2 = new Vertex2D(new Point2D(P2.X, 0, 2), v2.P2, v2.Orientation); }
+                    else //not under the borders
+                    { v2 = new Vertex2D(new Point2D(P2.X, P2.Y - Chosen_maxdim, 2), v2.P2, v2.Orientation); }
+                    Vertex2D nearestperpendicular = Fetchcrossover_vertex_nearest(verticestoconsider, v2, P2);
+                    if (nearestperpendicular.P1.Index == 0 && nearestperpendicular.P2.Index == 0) { break; }
+                    Epoint = new ExtremePoint(Chosen_maxdim, P2.X, nearestperpendicular.P1.Y, P2.Index);
+                    Epoint.Identifier = "Shadow";
+
+                    break;
+                }
+            case "Horizontal":
+                {
+                    Vertex2D v3 = p.Vertixes.Where(x => x.ID == "v3").ToList()[0];
+                    Point2D P1 = v3.P1;
+                    if (P1.X - Chosen_maxdim < 0) //under the borders
+                    { v3 = new Vertex2D(new Point2D(P1.X, 0, 2), v3.P2, v3.Orientation); }
+                    else //not under the borders
+                    { v3 = new Vertex2D(new Point2D(P1.X - Chosen_maxdim, P1.Y, 3), v3.P2, v3.Orientation); }
+                    Vertex2D nearestperpendicular = Fetchcrossover_vertex_nearest(verticestoconsider, v3, P1);
+                    if (nearestperpendicular.P1.Index == 0 && nearestperpendicular.P2.Index == 0) { break; }
+                    Epoint = new ExtremePoint(Chosen_maxdim, nearestperpendicular.P1.X, P1.Y, P1.Index);
+                    Epoint.Identifier = "Shadow";
+                    break;
+                }
+        }
 
 
 
 
+        return Epoint;
+    }
+
+    public double Fitness(Package2D p, ExtremePoint chosen)
+    {
+        double output = 0;
+        double a1 = 1; double a2 = 1; double a3 = 0; double a4 = 0; double beta = 0;
+        double overlaps = 0; double heighvalue = 0; double penalties = 0; double rewards = 0;
+
+        Vertex2D v1 = p.Vertixes.Where(x => x.ID == "v1").ToList()[0];
+        Vertex2D E_v1 = chosen.Initial_Space.Vertixes.Where(x => x.ID == "v1").ToList()[0];
+        Vertex2D v2 = p.Vertixes.Where(x => x.ID == "v2").ToList()[0];
+        Vertex2D E_v2 = chosen.Initial_Space.Vertixes.Where(x => x.ID == "v2").ToList()[0];
+        Vertex2D v3 = p.Vertixes.Where(x => x.ID == "v3").ToList()[0];
+        Vertex2D E_v3 = chosen.Initial_Space.Vertixes.Where(x => x.ID == "v3").ToList()[0];
+        Vertex2D v4 = p.Vertixes.Where(x => x.ID == "v4").ToList()[0];
+        Vertex2D E_v4 = chosen.Initial_Space.Vertixes.Where(x => x.ID == "v4").ToList()[0];
+
+        //OVERLAPS
+        if (E_v1.Realsection.Item2.X + E_v1.Realsection.Item2.Y != 0)
+        {
+            double bottom = a1 * (2 * v1.Length) / (Euclideandistance(E_v1.Realsection.Item1, E_v1.Realsection.Item2) + E_v1.Length);
+            if (bottom == 1) { a3 = 1; }
+            overlaps += bottom;
+
+        }
+        if (E_v2.Realsection.Item2.X + E_v2.Realsection.Item2.Y != 0)
+        {
+            double leftside = a2 * (2 * v2.Length) / (Euclideandistance(E_v2.Realsection.Item1, E_v2.Realsection.Item2) + E_v2.Length);
+            if (leftside == 1) { a4 = 1; }
+            overlaps += leftside;
+
+        }
+        if (a3 > 0) // bottom has been fully covered
+        {
+            if (E_v3.Realsection.Item2.X + E_v3.Realsection.Item2.Y != 0)
+            {
+                double rightside = a3 * (2 * v3.Length) / (Euclideandistance(E_v3.Realsection.Item1, E_v3.Realsection.Item2) + E_v3.Length);
+                overlaps += rightside;
+            }
+
+        }
+        if (a4 > 0) // left side has been fully covered
+        {
+            if (E_v4.Realsection.Item2.X + E_v4.Realsection.Item2.Y != 0)
+            {
+                double rightside = a4 * (2 * v4.Length) / (Euclideandistance(E_v4.Realsection.Item1, E_v4.Realsection.Item2) + E_v4.Length);
+                overlaps += rightside;
+            }
+
+        }
+        //HEIGHTVALUE
+        List<ExtremePoint> orderedpoints = ActiveExtremePoints.OrderByDescending(x => x.Y).ToList();
+
+        heighvalue = beta * ((1 / (orderedpoints.First().Y - orderedpoints.Last().Y)) * (chosen.Y - orderedpoints.Last().Y));
+
+        //Penalties
+
+
+        //Rewards
+
+
+        output = heighvalue + overlaps - penalties + rewards;
+        return output;
+    }
+    public double Euclideandistance(Point2D p1, Point2D p2)
+    {
+
+
+        double result = Math.Sqrt(Math.Pow(p1.X - p2.X, 2) +
+          Math.Pow(p1.Y - p2.Y, 2));
+
+        return result;
+    }
 
 
 

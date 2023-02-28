@@ -350,6 +350,7 @@ public class ExtremePoint : Point2D
     public List<Vertex2D> Spatial_Vertices = new List<Vertex2D>(); //chosen vertices for the space
     public Package2D Initial_Space { get; set; }
     public bool Used { get; set; } = false;
+    public string Identifier { get; set; }
     public List<string> Errorlog { get; set; } = new List<string>();
     public ExtremePoint(int maxdim, int x, int y, int index) : base(x, y, index)
     {
@@ -374,23 +375,23 @@ public class ExtremePoint : Point2D
             List<Vertex2D> relevantvertical = algo.Fetchcollinear_vertices(relevantvertices, v4, "Vertical");
             if (relevanthorizontal.Count > 1 | relevantvertical.Count > 1) { Errorlog.Add("Multiple vertices crossing Epoint"); return; } //should only be one vertex in each direction
             //VERTEX 1 Real
-            if ((relevanthorizontal[0].P2.X >= v1.P2.X) && (relevanthorizontal[0].P1.X <= v1.P1.X))//1
+            if ((relevanthorizontal[0].P2.X >= v1.P2.X) && (relevanthorizontal[0].P1.X <= v1.P1.X))//1 new one overcovers
             {
                 Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
                 new Tuple<Point2D, Point2D>(v1.P1, v1.P2);
                 if (relevanthorizontal[0].P2.X == v1.P2.X) { realv2 = true; }
             }
-            else if ((relevanthorizontal[0].P2.X < v1.P2.X) && (relevanthorizontal[0].P1.X <= v1.P1.X))//2
+            else if ((relevanthorizontal[0].P2.X < v1.P2.X) && (relevanthorizontal[0].P1.X <= v1.P1.X))//2 new one is shorter at the end
             {
                 Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
                 new Tuple<Point2D, Point2D>(v1.P1, relevanthorizontal[0].P2);
             }
-            else if ((relevanthorizontal[0].P2.X >= v1.P2.X) && (relevanthorizontal[0].P1.X >= v1.P1.X))//3
+            else if ((relevanthorizontal[0].P2.X >= v1.P2.X) && (relevanthorizontal[0].P1.X >= v1.P1.X))//3 new one is shorter at the end
             {
                 Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
                 new Tuple<Point2D, Point2D>(relevanthorizontal[0].P1, v1.P2);
             }
-            else if ((relevanthorizontal[0].P2.X < v1.P2.X) && (relevanthorizontal[0].P1.X >= v1.P1.X))//4
+            else if ((relevanthorizontal[0].P2.X < v1.P2.X) && (relevanthorizontal[0].P1.X >= v1.P1.X))//4 new one is shorter on both ends
             {
                 Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
                 new Tuple<Point2D, Point2D>(relevanthorizontal[0].P1, relevanthorizontal[0].P2);
