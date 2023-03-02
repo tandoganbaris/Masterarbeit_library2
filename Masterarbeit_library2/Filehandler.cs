@@ -4,15 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using CsvHelper;
+using System.Globalization;
+using System.Formats.Asn1;
 
 namespace Masterarbeit_library2;
 
 public class Filehandler
 {
+    public int NumberOfFiles { get; set; } = 1;
     public string? Input { get; set; }
     public string? Output { get; set; }
     public Package2D Depot { get; set; }
     public List<Package2D> Packagelist { get; set; } = new List<Package2D>();
+    public List<Package2D> Loadorder { get; set; } = new List<Package2D>();
     public Filehandler(string input)
     {
         Input = input;
@@ -22,6 +27,31 @@ public class Filehandler
             ReadLoad();
 
         }
+    }
+    public void Createfiles() // csv helper josh close
+    {
+        string filename = $"testload{1}.csv";
+        string path = Path.Combine(Output, filename);
+        using (var writer = new StreamWriter(path))
+        using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+        {
+            //csv.Context.RegisterClassMap<Infoclassmap2>();
+            //string[] header = new string[] { "ID", "P1", "P2", "P3", "P4" };
+            //csv.WriteField(header);
+            //csv.NextRecord();
+            foreach (var p in Loadorder)
+            {
+                string[] output = new string[5];
+                if (p.Indexes.Count > 0) { output[0] = p.Indexes["Instance"].ToString(); }
+                else { output[0]= "0"; }
+                for(int i=0; i<p.Pointslist.Count; i++) { output[i+1] = (p.Pointslist[i].CSVFormat()).ToString(); }
+
+                csv.WriteField(output);
+                csv.NextRecord();
+            }
+        }
+       
+        return;
     }
     public bool Readtest()
     {
@@ -69,13 +99,13 @@ public class Filehandler
                 string[] parts = lines[i].Split(" ");
                 int x = Convert.ToInt32(parts[1]);
                 int y = Convert.ToInt32(parts[2]);
-               
+
                 Package2D p = new Package2D(x, y);
                 p.Indexes.Add("Instance", Convert.ToInt32(parts[0]));
                 Packagelist.Add(p);
 
             }
-            string[] parts2 = lines[startindex-2].Split(" ");
+            string[] parts2 = lines[startindex - 2].Split(" ");
             string[] parts3 = lines[startindex - 1].Split(" ");
             int xdepot = Convert.ToInt32(parts2[0]);
             int ydepot = Convert.ToInt32(parts3[0]);
@@ -83,7 +113,7 @@ public class Filehandler
             Package2D depot = new Package2D(xdepot, ydepot);
             depot.Indexes.Add("Depot", 0);
             Depot = depot;
-            
+
 
         }
         return;

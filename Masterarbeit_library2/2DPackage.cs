@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CsvHelper.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,17 @@ using System.Threading.Tasks;
 
 namespace Masterarbeit_library2;
 //WPF 2d packages rectangle data binding 
-
+public class Infoclassmap2 : ClassMap<Package2D>
+{
+    public Infoclassmap2()
+    {
+        try { Map(x => x.Indexes["Instance"].ToString()).Name("ID"); } catch { }
+        Map(x => x.Pointslist[0].CSVFormat()).Name("P1");
+        Map(x => x.Pointslist[1].CSVFormat()).Name("P2");
+        Map(x => x.Pointslist[2].CSVFormat()).Name("P3");
+        Map(x => x.Pointslist[3].CSVFormat()).Name("P4");
+    }
+}
 public class Package2D
 {
 
@@ -42,9 +53,9 @@ public class Package2D
 
     public Dictionary<string, bool> Rotationallowance { get; set; } = new Dictionary<string, bool>(); // XY 
 
-    public List<Point2D> Pointslist { get; set; }
+    public List<Point2D> Pointslist { get; set; } = new List<Point2D>();
     public List<Vertex2D> Vertixes { get; set; } = new List<Vertex2D>();
-    public Package2D(int length, int width)
+    public Package2D(int width, int length)
     {    //    4-------v3-------3
          //    |                |
          //    |                |
@@ -128,6 +139,7 @@ public class Package2D
             Rotationallowance.Add("XY", false);
 
         }
+        //this.ToString();
     }
 
     public override string ToString()
@@ -405,7 +417,7 @@ public class ExtremePoint : Point2D
                     Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
                     new Tuple<Point2D, Point2D>(relevanthorizontal[0].P1, v1.P2);
                 }
-                else if ((relevanthorizontal[0].P2.X < v1.P2.X) && (relevanthorizontal[0].P1.X >= v1.P1.X))//4 new one is shorter on both ends
+                else if ((relevanthorizontal[0].P2.X < v1.P2.X) && (relevanthorizontal[0].P1.X >= v1.P1.X))//4 new one is closer to origin on both ends
                 {
                     Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
                     new Tuple<Point2D, Point2D>(relevanthorizontal[0].P1, relevanthorizontal[0].P2);
@@ -450,11 +462,44 @@ public class ExtremePoint : Point2D
             }
 
             //all the other vertices
-
+            
             foreach (Vertex2D v in relevantvertices) //note that rules omit collinearity on bottom and left
             {
-                Rule r = new Rule(v, this);
-                Space.Add(r);
+                switch (v.Orientation)
+                {
+                    case "Vertical":
+                        {
+                            if (v.P1.X != this.X)
+                            {
+                                Rule r = new Rule(v, this);
+                                Space.Add(r);
+                            }
+                            else if ((v.P1.X == this.X) && (v.ID == "v4"))
+                            {
+                                Rule r = new Rule(v, this);
+                                Space.Add(r);
+
+                            }
+
+                            break;
+                        }
+                    case "Horizontal":
+                        {
+                            if (v.P1.Y != this.Y)
+                            {
+                                Rule r = new Rule(v, this);
+                                Space.Add(r);
+                            }
+                            else if ((v.P1.Y == this.Y) && (v.ID == "v4"))
+                            {
+                                Rule r = new Rule(v, this);
+                                Space.Add(r);
+                            }
+                            break;
+                        }
+
+                }
+
             }
             if (realv2)
             {
@@ -555,13 +600,15 @@ public class Rule
         foreach (Point2D p in points)
 
         {
-            switch (Rulevertex.Orientation)
+            if (!(p.X == RulePoint.X && p.Y == RulePoint.Y)) //if its not the handle
             {
-                case "Horizontal":
-                    {
-                        if (RulePoint.Y < Rulevertex.P1.Y) //excludes collinear vertices
+                switch (Rulevertex.Orientation)
+                {
+                    case "Horizontal":
                         {
-                            if (Rulevertex.P1.X <= p.X && p.X <= Rulevertex.P2.X)
+
+                            if ((Rulevertex.P1.X <= p.X && p.X <= Rulevertex.P2.X) |
+                                (Rulevertex.P1.X >= p.X && p.X >= Rulevertex.P2.X))
                             {
                                 if (Rulevertex.P1.Y < p.Y) //if point is outside
                                 {
@@ -569,14 +616,14 @@ public class Rule
                                 }
                             }
 
+
+                            break;
                         }
-                        break;
-                    }
-                case "Vertical":
-                    {
-                        if (RulePoint.X < Rulevertex.P1.X) //excludes collinear vertices 
+                    case "Vertical":
                         {
-                            if (Rulevertex.P1.Y <= p.Y && p.Y <= Rulevertex.P2.Y)
+
+                            if ((Rulevertex.P1.Y <= p.Y && p.Y <= Rulevertex.P2.Y) |
+                                (Rulevertex.P1.Y >= p.Y && p.Y >= Rulevertex.P2.Y))
                             {
                                 if (Rulevertex.P1.X < p.X) //if point is outside
                                 {
@@ -584,9 +631,10 @@ public class Rule
                                 }
                             }
 
+
+                            break;
                         }
-                        break;
-                    }
+                }
             }
 
         }
@@ -621,6 +669,10 @@ public class Point2D
     {
         return $"X: {X.ToString().PadLeft(3)} Y: {Y.ToString().PadLeft(3)} Index: P{Index}";
     }
+    public string CSVFormat()
+    {
+        return $"({X}/{Y})";
+    }
 }
 
 
@@ -633,7 +685,7 @@ public class Vertex2D
     public Point2D P1 { get; set; }
     public Point2D P2 { get; set; }
 
-    public Tuple<Point2D, Point2D> Realsection { get; set; }
+    public Tuple<Point2D, Point2D> Realsection { get; set; } = new Tuple<Point2D, Point2D>(new Point2D(0, 0, 0), new Point2D(0, 0, 0));
     public Tuple<Point2D, Point2D> Exposedsection { get; set; }
     public double Length { get; set; }
     public string Orientation { get; set; }
