@@ -30,7 +30,7 @@ public class Filehandler
     }
     public void Createfiles() // csv helper josh close
     {
-        string filename = $"testload{1}.csv";
+        string filename = $"testload{2}.csv";
         string path = Path.Combine(Output, filename);
         using (var writer = new StreamWriter(path))
         using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))

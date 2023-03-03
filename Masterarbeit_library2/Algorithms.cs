@@ -27,12 +27,12 @@ public class Extreme_Algorithms
     // all vertices start with P1 and end with P2, dimensions increase so P1<P2 on the relevant axis
     internal List<Vertex2D> verticestoconsider = new List<Vertex2D>();
     internal List<ExtremePoint> ActiveExtremePoints = new List<ExtremePoint>();
-    internal int Chosen_maxdim { get; set; } = 150;
+    internal int Chosen_maxdim { get; set; } = 100;
     public List<string> Errorlog { get; set; } = new List<string>();
     public List<Package2D> Input_packages { get; set; } = new List<Package2D>();
     public List<Package2D> Load_order { get; set; } = new List<Package2D>();
-    public List<MasterRule> Rules { get; set; } = new List<MasterRule>();
-    public Package2D Bin { get; set; } = new Package2D(400, 1000); //needs to be adjusted
+    public Dictionary<Point2D, MasterRule> Rules { get; set; } = new Dictionary<Point2D, MasterRule>();
+    public Package2D Bin { get; set; } = new Package2D(300, 1000); //needs to be adjusted
     public void Main_SU()
     {
         List<Package2D> input = Input_packages.ToList();
@@ -40,11 +40,11 @@ public class Extreme_Algorithms
         loadorder.Add(Bin);
         loadorder.Add(input[0]);
         loadorder[0].OverwritePosition(0, 0, 1); //set the bin
-      
+
         verticestoconsider.AddRange(loadorder[0].Vertixes); //add the vertices of the bin
         loadorder[1].OverwritePosition(0, 0, 1); //use first point as handle and place bottom left
         MasterRule r = new MasterRule(loadorder[1]);
-        Rules.Add(r);
+        Rules.Add(r.Center, r);
         ExtremePoint FirstE_point = new ExtremePoint(Chosen_maxdim, 0, 0, 1);
         FirstE_point.Create_Space(verticestoconsider);
         ActiveExtremePoints.Clear(); ActiveExtremePoints.Add(FirstE_point);
@@ -66,18 +66,19 @@ public class Extreme_Algorithms
                 Package2D current_pack_rotated = new Package2D(current_pack.Length, current_pack.Width);
                 current_pack_rotated.OverwritePosition(E.X, E.Y, 1);
 
-                bool fitsmaster = true;
+                //bool fitsmaster = true;
 
-                foreach (MasterRule rule in Rules)
-                {
-                    fitsmaster = rule.TestPoints(current_pack.Pointslist.ToList());
-                    if (fitsmaster == false) { fitsmaster = false;  break; }
-                }
-                if (fitsmaster == false) { continue; }
-               
+                //foreach (MasterRule rule in Rules.Values)
+                //{
+                //    fitsmaster = rule.TestPoints(current_pack.Pointslist.ToList());
+                //    if (fitsmaster == false) { fitsmaster = false; break; }
+                //}
+                //if (fitsmaster == false) { continue; }
+
 
                 bool fits1 = E.Fitsinspace2(current_pack.Pointslist);
                 bool fits2 = false;// E.Fitsinspace2(current_pack_rotated.Pointslist);
+                if(!fits1 && !fits2) { continue; }
                 if (fits1 && fits2) //if it fits within the boundaries
                 {
                     double calculated_fitness = Fitness(current_pack, E);
@@ -140,16 +141,17 @@ public class Extreme_Algorithms
                 }
 
             }
-            input.Remove(input.First());
+            
             Package2D chosenpack = FitnessList.Last().Value[0].Item1;
             ExtremePoint chosenE = FitnessList.Last().Value[0].Item2;
             chosenpack.OverwritePosition(chosenE.X, chosenE.Y, 1);
             loadorder.Add(chosenpack);
             MasterRule r2 = new MasterRule(chosenpack);
-            Rules.Add(r2);
+            Rules.Add(r2.Center, r2);
             Refresh_ExtremePoints(chosenpack, chosenE);
             Refresh_Vertices(chosenpack, chosenE);
             FitnessList.Clear();
+            input.Remove(input.First());
         }
         Load_order.Clear();
         Load_order.AddRange(loadorder);
@@ -380,6 +382,24 @@ public class Extreme_Algorithms
 
         return v_out;
     }
+    public List<MasterRule> Fetch_Relevant_Masterrules(ExtremePoint E) //checks perimeter of a E_point
+    {
+        List<MasterRule> output = new List<MasterRule>();
+        bool fitsmaster = true;
+
+        foreach (MasterRule rule in Rules.Values)
+        {
+            List<Point2D> handle = new List<Point2D> { rule.Center };
+            fitsmaster = E.Overlapcheck.TestPoints(handle);
+            if (fitsmaster == false) { output.Add(rule); }
+        }
+
+
+
+
+        return output;
+
+    }
     public void Refresh_ExtremePoints(Package2D p, ExtremePoint chosen)
     //first refresh this then vertices as it can cause confusion with vertices
     {
@@ -453,6 +473,31 @@ public class Extreme_Algorithms
                         break;
                     }
             }
+
+        }
+        foreach (ExtremePoint E in ActiveExtremePoints.ToList()) //checks overlaps of Extreme points
+        {
+            if (E.Overlapcheck == null)
+            {
+                Package2D Perimeter = new Package2D(Chosen_maxdim, Chosen_maxdim);
+                Perimeter.OverwritePosition(E.X - Chosen_maxdim / 2, E.Y - Chosen_maxdim / 2, 1);
+                MasterRule Extreme_inside = new MasterRule(Perimeter);
+                Extreme_inside.Center = E;
+                E.Overlapcheck = Extreme_inside;
+            }
+            List<MasterRule> relevantones = Fetch_Relevant_Masterrules(E);
+            if (relevantones.Count > 0)
+            {
+                bool fitsmaster = true;
+                List<Point2D> inputofrule = new List<Point2D> { E, new Point2D(E.X + 1, E.Y + 1, 0) };
+                foreach (MasterRule rule in relevantones)
+                {
+                    fitsmaster = rule.TestPoints(inputofrule);
+                    if (fitsmaster == false) { fitsmaster = false; break; }
+                }
+                if (fitsmaster == false) { ActiveExtremePoints.Remove(E); }
+            }
+
 
         }
 
@@ -576,17 +621,29 @@ public class Extreme_Algorithms
 
         for (int i = 0; i < verticestoconsider.ToList().Count; i++) //duplicates
         {
-            for (int j = 0; j < verticestoconsider.ToList().Count; j++)
-            {
-                if (i == j) { continue; }
-                else
-                {
-                    Vertex2D v = verticestoconsider[i]; Vertex2D v2 = verticestoconsider[j];
+            Vertex2D v = verticestoconsider[i];
+            List<Vertex2D> verticesexcept = verticestoconsider.Where(x => x != v).ToList();
+            List<Vertex2D> internallist = Fetchcollinear_vertices(verticesexcept, v, v.Orientation);
 
-                    if ((v.P1.X == v2.P1.X) &&
-                       (v.P1.Y == v2.P1.Y) &&
-                        (v.P2.X == v2.P2.X) &&
-                        (v.P2.Y == v2.P2.Y)) { verticestoconsider.Remove(verticestoconsider[j]); i = 0; j = 0; }
+            if (internallist.Count > 0)
+            {
+                for (int j = 0; j < internallist.ToList().Count; j++)
+                {
+
+                    Vertex2D v2 = internallist[j];
+
+                    if ((v.P1.X == v2.P1.X) && (v.P1.Y == v2.P1.Y)
+                        && (v.P2.X == v2.P2.X) && (v.P2.Y == v2.P2.Y)) { verticestoconsider.Remove(v2); i = 0; j = 0; }
+                    else if (((v.P1.X == v2.P1.X) && (v.P1.Y == v2.P1.Y))
+                        ^ ((v.P2.X == v2.P2.X) && (v.P2.Y == v2.P2.Y)))
+                    {
+                        Vertex2D v3 = MergeVertices(v, v2);
+                        verticestoconsider.Remove(v);
+                        verticestoconsider.Remove(v2);
+                        verticestoconsider.Add(v3);
+                    }
+
+
                 }
             }
         }
@@ -894,17 +951,18 @@ public class Extreme_Algorithms
 public class MasterRule
 {
     public List<Point2D> Rulepoints { get; set; }
+    public Point2D Center { get; set; }
 
     public bool TestPoints(List<Point2D> points)
     {
-       
+
         bool tester = true;
         foreach (Point2D p in points)
 
 
         {
-            if ((Rulepoints[0].X < p.X)&& (p.X < Rulepoints[1].X)
-                && (Rulepoints[1].Y < p.Y)&& (p.Y < Rulepoints[2].Y))
+            if ((Rulepoints[0].X < p.X) && (p.X < Rulepoints[1].X)
+                && (Rulepoints[1].Y < p.Y) && (p.Y < Rulepoints[2].Y))
             {
                 tester = false; break;
             }
@@ -916,5 +974,6 @@ public class MasterRule
     public MasterRule(Package2D p)
     {
         Rulepoints = p.Pointslist.ToList();
+        Center = new Point2D((p.Pointslist[0].X + p.Pointslist[2].X) / 2, (p.Pointslist[0].Y + p.Pointslist[2].Y) / 2, 5);
     }
 }

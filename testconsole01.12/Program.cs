@@ -13,7 +13,7 @@ class Program
 {
     public static void Main(string[] args)
     {
-        string filepath = @"C:\classes\masterarbeit\instances\N_T\N_T\T1b.ins2D";
+        string filepath = @"C:\classes\masterarbeit\instances\N_T\N_T\T7e.ins2D";
     
         //@"C:\classes\masterarbeit\instances\N_T\N_T\N1c.ins2D"
         string outputpath = @"C:\Users\tando\Desktop\tests\";

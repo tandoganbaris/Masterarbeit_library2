@@ -371,6 +371,7 @@ public class ExtremePoint : Point2D
     public List<Rule> Space = new List<Rule>(); //rules created from the chosen vertices
     public List<Vertex2D> Spatial_Vertices = new List<Vertex2D>(); //chosen vertices for the space
     public Package2D Initial_Space { get; set; }
+    public MasterRule Overlapcheck { get; set; }
     public bool Used { get; set; } = false;
     public string Identifier { get; set; }
     public List<string> Errorlog { get; set; } = new List<string>();
@@ -397,7 +398,7 @@ public class ExtremePoint : Point2D
             Vertex2D v4 = Initial_Space.Vertixes.Where(x => x.ID == "v4").ToList()[0];
             List<Vertex2D> relevanthorizontal = algo.Fetchcollinear_vertices(relevantvertices, v1, "Horizontal");
             List<Vertex2D> relevantvertical = algo.Fetchcollinear_vertices(relevantvertices, v4, "Vertical");
-            if (relevanthorizontal.Count > 1 | relevantvertical.Count > 1) { Errorlog.Add("Multiple vertices crossing Epoint"); return; } //should only be one vertex in each direction
+            if (relevanthorizontal.Count > 1 | relevantvertical.Count > 1) { Errorlog.Add("Multiple vertices crossing Epoint"); } //should only be one vertex in each direction
             //VERTEX 1 Real
             if (relevanthorizontal.Count != 0)
             {
@@ -462,20 +463,23 @@ public class ExtremePoint : Point2D
             }
 
             //all the other vertices
-            
+
             foreach (Vertex2D v in relevantvertices) //note that rules omit collinearity on bottom and left
             {
                 switch (v.Orientation)
                 {
                     case "Vertical":
                         {
-                            if (v.P1.X != this.X)
+                            if (v.P1.X == 0 && v.P1.Y == 0) { break; }
+                            else if (v.P1.X != this.X)
                             {
                                 Rule r = new Rule(v, this);
                                 Space.Add(r);
                             }
+
                             else if ((v.P1.X == this.X) && (v.ID == "v4"))
                             {
+                                if (v.P1.X == 0 && v.P2.Y == 0) { break; }
                                 Rule r = new Rule(v, this);
                                 Space.Add(r);
 
@@ -485,13 +489,14 @@ public class ExtremePoint : Point2D
                         }
                     case "Horizontal":
                         {
-                            if (v.P1.Y != this.Y)
+                            if (v.P1.X == 0 && v.P1.Y == 0) { break; }
+                            else if (v.P1.Y != this.Y)
                             {
                                 Rule r = new Rule(v, this);
                                 Space.Add(r);
                             }
-                            else if ((v.P1.Y == this.Y) && (v.ID == "v4"))
-                            {
+                            else if ((v.P1.Y == this.Y) && (v.ID == "v1"))
+                            {   if(v.P1.X == 0 && v.P2.Y == 0){ break; }
                                 Rule r = new Rule(v, this);
                                 Space.Add(r);
                             }
@@ -583,7 +588,10 @@ public class ExtremePoint : Point2D
             foreach (Rule r in Space)
             {
                 bool loopover = r.TestPoints(points);
-                if (loopover == false) { fits = false; break; }
+                if (loopover == false)
+                {
+                    Errorlog.Add("this rule was the breaking point" + r); fits = false; break;
+                }
             }
         }
         return fits;
@@ -646,6 +654,10 @@ public class Rule
         Rulevertex = v;
         RulePoint = p;
     }
+    public override string ToString()
+    {
+        return this.Rulevertex.ToString();
+    }
 }
 public class Point2D
 {
@@ -699,7 +711,7 @@ public class Vertex2D
     }
     public override string ToString()
     {
-        return $"P1: {P1.Index}; P2: {P2.Index}; Length: {Length}; Orientation: {Orientation}; ID: {ID}";
+        return $"P1: {P1.X}/{P1.Y}; P2: {P2.X}/{P2.Y}; Length: {Length}; Orientation: {Orientation}; ID: {ID}";
     }
 
 }
