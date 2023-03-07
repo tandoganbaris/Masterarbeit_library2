@@ -6,6 +6,7 @@ using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ public class Extreme_Algorithms
     public List<Package2D> Input_packages { get; set; } = new List<Package2D>();
     public List<Package2D> Load_order { get; set; } = new List<Package2D>();
     public Dictionary<Point2D, MasterRule> Rules { get; set; } = new Dictionary<Point2D, MasterRule>();
-    public Package2D Bin { get; set; } = new Package2D(300, 1000); //needs to be adjusted
+    public Package2D Bin { get; set; } = new Package2D(200, 400); //needs to be adjusted
     public void Main_SU()
     {
         List<Package2D> input = Input_packages.ToList();
@@ -155,7 +156,7 @@ public class Extreme_Algorithms
             Rules.Add(r2.Center, r2);
 
 
-            if (input.ToList().Count == 194)
+            if (input.ToList().Count == 150)
             {
                 string here = string.Empty;
             }
@@ -163,10 +164,7 @@ public class Extreme_Algorithms
             Refresh_Vertices(chosenpack, chosenE);
             FitnessList.Clear();
             input.Remove(input.First());
-            foreach (ExtremePoint E in ActiveExtremePoints.ToList())
-            {
-                E.Space.Clear();
-            }
+           
         }
         Load_order.Clear();
         Load_order.AddRange(loadorder);
@@ -484,7 +482,7 @@ public class Extreme_Algorithms
                             }
                             else if (E_v4.Realsection.Item1.Y - 1 > v3.P2.Y) //non overlap  (in the air)
                             {
-                                ExtremePoint ShadowHorizontal = ShadowPoint(p, chosen, v3.Orientation);
+                                ExtremePoint ShadowHorizontal = ShadowPoint(p, chosen, v3.Orientation); //need to add method to create float extremes
                                 if (ShadowHorizontal.Index != 1000) { ActiveExtremePoints.Add(ShadowHorizontal); }
                             }
                             ActiveExtremePoints.Add(e); verticestoconsider.Add(v3);
@@ -885,17 +883,20 @@ public class Extreme_Algorithms
         if (E_v1.Realsection.Item2.X + E_v1.Realsection.Item2.Y != 0)
         {
             double bottom = 0;
+            if (v1.P2.X < E_v1.Realsection.Item1.X) { bottom = 0; }
             if ((v1.P2.X < E_v1.Realsection.Item2.X) && (v1.P2.X >= E_v1.Realsection.Item1.X) && (v1.P1.X < E_v1.Realsection.Item1.X))
             {
                 bottom = a1 * (2 * (v1.P2.X - E_v1.Realsection.Item1.X)) / ((E_v1.Realsection.Item2.X - E_v1.Realsection.Item1.X) + E_v1.Length);
                 if (v1.P2.X == E_v1.Realsection.Item2.X)
-                { //reward
+                { //reward and try overrite E_v2 
+                    List<Vertex2D> rightside = Fetchcoincident_vertices(chosen.Spatial_Vertices, v1.P2, v2.Orientation).ToList();
+                    if(rightside.Count>0 && rightside[0].P1.Y > v1.P2.Y) { E_v2 = rightside[0]; E_v2.Realsection = new Tuple<Point2D, Point2D>(E_v2.P1, E_v2.P2); E_v2.Length = (double)E_v4.Length; a2 = 1; }
                 }
             }
-            else if ((v1.P2.X < E_v1.Realsection.Item2.X) && (v1.P1.X >= E_v1.Realsection.Item1.X))
+            else if ((v1.P2.X <= E_v1.Realsection.Item2.X) && (v1.P1.X >= E_v1.Realsection.Item1.X))
             {
                 bottom = a1 * (2 * v1.Length) / ((E_v1.Realsection.Item2.X - E_v1.Realsection.Item1.X) + E_v1.Length);
-                if (bottom == 1) { a1 = 1; }
+                if (bottom == 1) { a2 = 1.5; }
             }
             else if ((v1.P2.X > E_v1.Realsection.Item2.X) && (v1.P1.X <= E_v1.Realsection.Item2.X))//package is larger than the surface under 
             { bottom = a1 * (E_v1.Realsection.Item2.X - E_v1.Realsection.Item1.X) / E_v1.Length; }
@@ -905,30 +906,35 @@ public class Extreme_Algorithms
         if (E_v4.Realsection.Item2.X + E_v4.Realsection.Item2.Y != 0)
         {
             double leftside = 0;
-            if ((v4.P2.Y < E_v4.Realsection.Item2.Y) && (v4.P2.Y >= E_v4.Realsection.Item1.Y) && (v4.P1.Y < E_v4.Realsection.Item1.Y)) //if theres slight overlap, realsection far out but still touching
+            if(v4.P2.Y<E_v4.Realsection.Item1.Y) { leftside = 0; } //not reaching at all
+            else if ((v4.P2.Y < E_v4.Realsection.Item2.Y) && (v4.P2.Y >= E_v4.Realsection.Item1.Y) && (v4.P1.Y < E_v4.Realsection.Item1.Y)) // #1 : if theres slight overlap, realsection far out but still touching
             {
                 leftside = a4 * (2 * (v4.P2.Y - E_v4.Realsection.Item1.Y)) / ((E_v4.Realsection.Item2.Y - E_v4.Realsection.Item1.Y) + E_v4.Length);
                 if (v4.P2.Y == E_v4.Realsection.Item2.Y)
-                { //reward
+                { //reward and try overrite E_v3
+                    List<Vertex2D> ceiling = Fetchcoincident_vertices(chosen.Spatial_Vertices, v4.P2, v3.Orientation).ToList();
+                    if (ceiling.Count > 0 && ceiling[0].P2.X > v4.P2.X) { E_v3 = ceiling[0]; E_v3.Realsection = new Tuple<Point2D, Point2D>(E_v3.P1, E_v3.P2); E_v3.Length = (double)E_v1.Length; a3 = 1; }
                 }
             }
-            else if ((v4.P2.Y < E_v4.Realsection.Item2.Y) && (v4.P1.Y >= E_v4.Realsection.Item1.Y)) //if theres full overlap for v4
+            else if ((v4.P2.Y <= E_v4.Realsection.Item2.Y) && (v4.P1.Y >= E_v4.Realsection.Item1.Y)) //#2: if theres full overlap for v4
             {
                 leftside = a4 * (2 * v4.Length) / ((E_v4.Realsection.Item2.Y - E_v4.Realsection.Item1.Y) + E_v4.Length);
-                if (leftside == 1) { a3 = 1; }
+                if (leftside == 1) { a3 = 1.5; }
             }
-            else if ((v4.P2.Y > E_v4.Realsection.Item2.Y) && (v4.P1.Y <= E_v4.Realsection.Item2.Y)) //stepping up
+            else if ((v4.P2.Y > E_v4.Realsection.Item2.Y) && (v4.P1.Y <= E_v4.Realsection.Item2.Y)) //#3: stepping up
             {
                 leftside = a4 * ((E_v4.Realsection.Item2.Y - E_v4.Realsection.Item1.Y) / E_v4.Length);
             }
             overlaps += leftside;
 
         }
-        if (a3 > 0) // left side has been fully covered
+        //need to modify this overlap section to check all vertices for possible overlap 
+        if (a3 > 0 && a2 ==0) // left side has been fully covered
         {
             double topside = 0;
             if (E_v3.Realsection.Item2.X + E_v3.Realsection.Item2.Y != 0)
             {
+                if (v3.P2.X < E_v3.Realsection.Item1.X) { topside = 0; }
                 if ((v3.P2.X < E_v3.Realsection.Item2.X) && (v3.P2.X >= E_v3.Realsection.Item1.X) && (v3.P1.X < E_v3.Realsection.Item1.X))
                 {
                     topside = a3 * (2 * (v3.P2.X - E_v3.Realsection.Item1.X)) / ((E_v3.Realsection.Item2.X - E_v3.Realsection.Item1.X) + E_v3.Length);
@@ -946,9 +952,10 @@ public class Extreme_Algorithms
             }
 
         }
-        if (a2 > 0) // bottom has been fully covered
+        if (a2 > 0 && a3 ==0) // bottom has been fully covered
         {
             double rightside = 0;
+            if (v2.P2.Y < E_v2.Realsection.Item1.Y) { rightside = 0; }
             if (E_v2.Realsection.Item2.X + E_v2.Realsection.Item2.Y != 0)
             {
                 if ((v2.P2.Y < E_v2.Realsection.Item2.Y) && (v2.P2.Y >= E_v2.Realsection.Item1.Y) && (v2.P1.Y < E_v2.Realsection.Item1.Y)) //if theres slight overlap, realsection far out but still touching
@@ -968,10 +975,12 @@ public class Extreme_Algorithms
             }
 
         }
+        if (a2 > 0 && a3 > 0) { }
         //HEIGHTVALUE
         List<ExtremePoint> orderedpoints = ActiveExtremePoints.OrderByDescending(x => x.Y).ToList();
-
-        heighvalue = beta * ((1 / (orderedpoints.First().Y - orderedpoints.Last().Y)) * (chosen.Y - orderedpoints.Last().Y));
+        double y1 = orderedpoints.First().Y;
+        double y2 = orderedpoints.Last().Y;
+        heighvalue = (1 / (y1 -y2)) * (chosen.Y - y2)* beta;
 
         //Penalties
 
@@ -979,7 +988,7 @@ public class Extreme_Algorithms
         //Rewards
 
 
-        output = heighvalue + overlaps - penalties + rewards;
+        output = overlaps + rewards- heighvalue - penalties ;
         return output;
     }
     public double Euclideandistance(Point2D p1, Point2D p2)

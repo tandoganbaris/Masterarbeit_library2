@@ -386,6 +386,7 @@ public class ExtremePoint : Point2D
 
 
     {
+        Space.Clear(); Spatial_Vertices.Clear(); Spatial_Vertices.AddRange(relevantvertices);
         Extreme_Algorithms algo = new Extreme_Algorithms();
         Vertex2D v2 = Initial_Space.Vertixes.Where(x => x.ID == "v2").ToList()[0]; Space.Add(new Rule(v2, this));
         Vertex2D v3 = Initial_Space.Vertixes.Where(x => x.ID == "v3").ToList()[0]; Space.Add(new Rule(v3, this));
