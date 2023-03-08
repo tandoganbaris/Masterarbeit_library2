@@ -370,6 +370,8 @@ public class ExtremePoint : Point2D
 {
     public List<Rule> Space = new List<Rule>(); //rules created from the chosen vertices
     public List<Vertex2D> Spatial_Vertices = new List<Vertex2D>(); //chosen vertices for the space
+    public Point2D Original_Point { get; set; }
+    public string Shadowextension_Orientation { get; set; }
     public Package2D Initial_Space { get; set; }
     public MasterRule Overlapcheck { get; set; }
     public bool Used { get; set; } = false;
@@ -380,6 +382,7 @@ public class ExtremePoint : Point2D
         Package2D initial = new Package2D(maxdim, maxdim);
         initial.OverwritePosition(this.X, this.Y, 1);
         Initial_Space = initial;
+        Original_Point = new Point2D(x, y, index);
 
     }
     public void Create_Space(List<Vertex2D> relevantvertices) //create rules for the packages, need to pass relevant vertices
