@@ -19,22 +19,17 @@ class Program
         string outputpath = @"C:\Users\tando\Desktop\tests\";
         Filehandler fhandler = new Filehandler(filepath);
         fhandler.Output = outputpath;
-        //foreach(Package2D p2 in fhandler.Packagelist)
-        //{
-        //    Console.WriteLine(p2);
-        //}
-
+       
         Extreme_Algorithms algos = new Extreme_Algorithms();
         algos.Input_packages = fhandler.Packagelist.ToList();
-        algos.Main_SU();
+        algos.Main_OUO();
         Console.WriteLine("WHERE THE MAGIC HAPPENS");
         fhandler.Loadorder.Clear();
         fhandler.Loadorder.AddRange(algos.Load_order.ToList());
-        //foreach (Package2D p2 in fhandler.Loadorder)
-        //{
-        //    Console.WriteLine(p2.ToString() + p2.Pointslist[0].ToString());
-        //}
+      
         fhandler.Createfiles();
+
+       
 
 
 
