@@ -22,7 +22,7 @@ class Program
        
         Extreme_Algorithms algos = new Extreme_Algorithms();
         algos.Input_packages = fhandler.Packagelist.ToList();
-        algos.Main_OUO();
+        algos.Main_OnUO();
         Console.WriteLine("WHERE THE MAGIC HAPPENS");
         fhandler.Loadorder.Clear();
         fhandler.Loadorder.AddRange(algos.Load_order.ToList());
