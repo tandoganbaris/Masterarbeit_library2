@@ -136,7 +136,7 @@ public class Package2D
             Vertixes = verts;
 
 
-            Rotationallowance.Add("XY", false);
+            Rotationallowance.Add("XY", true);
 
         }
         //this.ToString();
