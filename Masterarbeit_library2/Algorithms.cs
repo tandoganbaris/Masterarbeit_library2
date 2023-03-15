@@ -2134,7 +2134,7 @@ public class Extreme_Algorithms
 
         output = overlaps + rewards + heighvalue - penalties;
         return output;
-    }
+    } //what do implement as obj proxy?
     public double Euclideandistance(Point2D p1, Point2D p2)
     {
 
