@@ -36,7 +36,7 @@ public class Extreme_Algorithms
     public List<Package2D> Load_order { get; set; } = new List<Package2D>();
     public List<Vertex2D> Virtual_Vertices { get; set; } = new List<Vertex2D>();
     public Dictionary<Point2D, MasterRule> Rules { get; set; } = new Dictionary<Point2D, MasterRule>();
-    public Package2D Bin { get; set; } = new Package2D(200, 230); //needs to be adjusted
+    public Package2D Bin { get; set; } = new Package2D(200, 300); //needs to be adjusted
 
     /// <summary>
     /// online input, placement is arbitrary, no rotation
@@ -423,20 +423,20 @@ public class Extreme_Algorithms
         List<Package2D> loadorder = new List<Package2D>();
         loadorder.Add(Bin);
         input = input.OrderByDescending(x => x.Volume).ToList(); //The Prep
-        loadorder.Add(input[0]);
+        //loadorder.Add(input[0]);
         loadorder[0].OverwritePosition(0, 0, 1); //set the bin
 
         verticestoconsider.AddRange(loadorder[0].Vertixes); //add the vertices of the bin
-        loadorder[1].OverwritePosition(0, 0, 1); //use first point as handle and place bottom left
-        if (loadorder[1].Width < loadorder[1].Length) { loadorder[1].Rotate(); }
-        MasterRule r = new MasterRule(loadorder[1]);
-        Rules.Add(r.Center, r);
+        //loadorder[1].OverwritePosition(0, 0, 1); //use first point as handle and place bottom left
+        //if (loadorder[1].Width < loadorder[1].Length) { loadorder[1].Rotate(); }
+        //MasterRule r = new MasterRule(loadorder[1]);
+        //Rules.Add(r.Center, r);
         ExtremePoint FirstE_point = new ExtremePoint(Chosen_maxdim, 0, 0, 1);
         FirstE_point.Create_Space(verticestoconsider);
         ActiveExtremePoints.Clear(); ActiveExtremePoints.Add(FirstE_point);
-        Refresh_ExtremePoints(loadorder[1], FirstE_point);
-        Refresh_Vertices(loadorder[1], FirstE_point);
-        input.Remove(input[0]);
+        //Refresh_ExtremePoints(loadorder[1], FirstE_point);
+        //Refresh_Vertices(loadorder[1], FirstE_point);
+        //input.Remove(input[0]);
 
         SortedList<double, List<Tuple<Package2D, ExtremePoint>>> FitnessList =
                 new SortedList<double, List<Tuple<Package2D, ExtremePoint>>>();
@@ -446,11 +446,16 @@ public class Extreme_Algorithms
 
             foreach (ExtremePoint E in ActiveExtremePoints.ToList())// can add another loop for packs to do best fit
             {
-                bool needsspace = Simple_Overlapcheck_manual(E, Rules.Last().Value.Rulepoints);
+            
+                bool needsspace = true;
+                if (Rules.Count != 0){ needsspace = Simple_Overlapcheck_manual(E, Rules.Last().Value.Rulepoints); }
                 if ((needsspace == false) || (E.Space.Count == 0)) { E.Create_Space(Fetchrelevant_vertices(E)); }
                 foreach (Package2D p in input.ToList())
                 {
-
+                    if (loadorder.Count ==134 && p.Indexes["Instance"] == 8 && E.Y == 145 && E.X <85)
+                    {
+                        string here = string.Empty;
+                    }
                     Package2D current_pack = p;
                     current_pack.OverwritePosition(E.X, E.Y, 1); //move package to this Extreme Point, index is handle= P1
                     Package2D current_pack_rotated = new Package2D(current_pack.Length, current_pack.Width);
@@ -480,8 +485,13 @@ public class Extreme_Algorithms
 
 
             }
+            
             Package2D chosenpack = FitnessList.Last().Value[0].Item1;
             ExtremePoint chosenE = FitnessList.Last().Value[0].Item2;
+            if (chosenpack.Indexes["Instance"] == 8)//p. && 
+            {
+                string here = string.Empty;
+            }
             chosenpack.OverwritePosition(chosenE.X, chosenE.Y, 1);
             loadorder.Add(chosenpack);
             MasterRule r2 = new MasterRule(chosenpack);
@@ -1312,7 +1322,10 @@ public class Extreme_Algorithms
     public void Refresh_ExtremePoints(Package2D p, ExtremePoint chosen)
     //first refresh this then vertices as it can cause confusion with vertices
     {
-
+        if (p.Indexes["Instance"] == 170)//p. && 
+        {
+            string here = string.Empty;
+        }
         ActiveExtremePoints.Remove(chosen);
         Notallowed.Add(chosen);
 
@@ -1346,6 +1359,7 @@ public class Extreme_Algorithms
                             if (verticesofpoint2.Count == 0) //hanging
                             {
                                 ExtremePoint ShadowVertical = ShadowPoint(p, e, v2.Orientation);
+                                bool testthis = Simple_Overlapcheck(ShadowVertical);
                                 if (ShadowVertical.Index != 1000)
                                 {
                                     Vertex2D virtualvert = new Vertex2D(ShadowVertical, ShadowVertical.Original_Point, ShadowVertical.Shadowextension_Orientation);
@@ -1395,6 +1409,7 @@ public class Extreme_Algorithms
                             if (verticesofpoint4.Count == 0) //stepping up
                             {
                                 ExtremePoint ShadowHorizontal = ShadowPoint(p, e, v3.Orientation);
+                                
                                 if (ShadowHorizontal.Index != 1000)
                                 {
                                     Vertex2D virtualvert = new Vertex2D(ShadowHorizontal, ShadowHorizontal.Original_Point, ShadowHorizontal.Shadowextension_Orientation);
@@ -1956,6 +1971,7 @@ public class Extreme_Algorithms
     }
     public ExtremePoint ShadowPoint(Package2D p, ExtremePoint chosen, string caseorientation)
     {
+        double shadowsearchdim = Chosen_maxdim * 1.5;
         ExtremePoint Epoint = new ExtremePoint(Chosen_maxdim, 0, 0, 1000); //dummy
         switch (caseorientation)
         {
@@ -1967,9 +1983,9 @@ public class Extreme_Algorithms
                     if (P2.Y - Chosen_maxdim < 0) //under the borders
                     { v2 = new Vertex2D(new Point2D(P2.X, 0, 2), v2.P2, v2.Orientation); }
                     else //not under the borders
-                    { v2 = new Vertex2D(new Point2D(P2.X, P2.Y - Chosen_maxdim, 2), v2.P2, v2.Orientation); }
+                    { v2 = new Vertex2D(new Point2D(P2.X, (int)(P2.Y - shadowsearchdim), 2), v2.P2, v2.Orientation); }
                     Vertex2D nearestperpendicular = Fetchcrossover_vertex_nearest(verticestoconsider, v2, P2);
-                    if ((nearestperpendicular.P1.Index == 0 && nearestperpendicular.P2.Index == 0) | (nearestperpendicular.P2.Y == P2.Y)) { break; }
+                    if ((nearestperpendicular.P1.Index == 0 && nearestperpendicular.P2.Index == 0) || (nearestperpendicular.P2.Y == P2.Y)) { break; }
                     Epoint = new ExtremePoint(Chosen_maxdim, P2.X, nearestperpendicular.P1.Y, P2.Index);
                     Epoint.Identifier = "Shadow";
                     Epoint.Shadowextension_Orientation = "Vertical";
@@ -1983,9 +1999,9 @@ public class Extreme_Algorithms
                     if (P1.X - Chosen_maxdim < 0) //under the borders
                     { v3 = new Vertex2D(new Point2D(0, P1.Y, 2), v3.P2, v3.Orientation); }
                     else //not under the borders
-                    { v3 = new Vertex2D(new Point2D(P1.X - Chosen_maxdim, P1.Y, 3), v3.P2, v3.Orientation); }
+                    { v3 = new Vertex2D(new Point2D((int)(P1.X - shadowsearchdim), P1.Y, 3), v3.P2, v3.Orientation); }
                     Vertex2D nearestperpendicular = Fetchcrossover_vertex_nearest(verticestoconsider, v3, P1);
-                    if ((nearestperpendicular.P1.Index == 0 && nearestperpendicular.P2.Index == 0) | (nearestperpendicular.P2.X == P1.X)) { break; }
+                    if ((nearestperpendicular.P1.Index == 0 && nearestperpendicular.P2.Index == 0) || (nearestperpendicular.P2.X == P1.X)) { break; }
                     Epoint = new ExtremePoint(Chosen_maxdim, nearestperpendicular.P1.X, P1.Y, P1.Index);
                     Epoint.Identifier = "Shadow";
                     Epoint.Shadowextension_Orientation = "Horizontal";
@@ -1994,7 +2010,8 @@ public class Extreme_Algorithms
         }
 
         Epoint.Original_Point = chosen.Original_Point;
-
+        bool testout = Simple_Overlapcheck(Epoint);
+        if (!testout) { Epoint = new ExtremePoint(Chosen_maxdim, 0, 0, 1000); }
 
         return Epoint;
     }
