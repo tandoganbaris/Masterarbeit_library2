@@ -13,7 +13,7 @@ class Program
 {
     public static void Main(string[] args)
     {
-        string filepath = @"C:\classes\masterarbeit\instances\N_T\N_T\T7e.ins2D";
+        string filepath = @"C:\classes\masterarbeit\instances\N_T\N_T\N7e.ins2D";
     
         //@"C:\classes\masterarbeit\instances\N_T\N_T\N1c.ins2D"
         string outputpath = @"C:\Users\tando\Desktop\tests\";
@@ -22,7 +22,8 @@ class Program
        
         Extreme_Algorithms algos = new Extreme_Algorithms();
         algos.Input_packages = fhandler.Packagelist.ToList();
-        algos.Main_OffUO();
+        algos.Input_Analysis();
+        algos.Main_OffUR();
         Console.WriteLine("WHERE THE MAGIC HAPPENS");
         fhandler.Loadorder.Clear();
         fhandler.Loadorder.AddRange(algos.Load_order.ToList());
