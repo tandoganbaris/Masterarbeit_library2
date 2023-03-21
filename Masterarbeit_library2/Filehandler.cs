@@ -7,6 +7,7 @@ using System.IO;
 using CsvHelper;
 using System.Globalization;
 using System.Formats.Asn1;
+using System.Text.RegularExpressions;
 
 namespace Masterarbeit_library2;
 
@@ -24,13 +25,13 @@ public class Filehandler
         bool canberead = Readtest();
         if ((Input.Length > 0) && (canberead))
         {
-            ReadLoad();
+            ReadLoad2();
 
         }
     }
     public void Createfiles() // csv helper josh close
     {
-        string filename = $"testload{3}.csv";
+        string filename = $"testload{4}.csv";
         string path = Path.Combine(Output, filename);
         using (var writer = new StreamWriter(path))
         using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
@@ -43,14 +44,14 @@ public class Filehandler
             {
                 string[] output = new string[5];
                 if (p.Indexes.Count > 0) { output[0] = p.Indexes["Instance"].ToString(); }
-                else { output[0]= "0"; }
-                for(int i=0; i<p.Pointslist.Count; i++) { output[i+1] = (p.Pointslist[i].CSVFormat()).ToString(); }
+                else { output[0] = "0"; }
+                for (int i = 0; i < p.Pointslist.Count; i++) { output[i + 1] = (p.Pointslist[i].CSVFormat()).ToString(); }
 
                 csv.WriteField(output);
                 csv.NextRecord();
             }
         }
-       
+
         return;
     }
     public bool Readtest()
@@ -65,7 +66,7 @@ public class Filehandler
             return false;
         }
     }
-    public void ReadLoad()
+    public void ReadLoad1() //for instances with id 
     {
         List<Point> points = new List<Point>();
         if (Input.Length > 0)
@@ -96,7 +97,11 @@ public class Filehandler
             }
             for (int i = startindex; i < lines.Count; i++)
             {
-                string[] parts = lines[i].Split(" ");
+
+                string input = Regex.Replace(lines[i], @"\s\s+", " ").Trim();
+
+                //string[] parts = lines[i].Split(" ");
+                string[] parts = input.Split(" ");
                 int x = Convert.ToInt32(parts[1]);
                 int y = Convert.ToInt32(parts[2]);
 
@@ -105,18 +110,79 @@ public class Filehandler
                 Packagelist.Add(p);
 
             }
-            string[] parts2 = lines[startindex - 2].Split(" ");
-            string[] parts3 = lines[startindex - 1].Split(" ");
-            int xdepot = Convert.ToInt32(parts2[0]);
-            int ydepot = Convert.ToInt32(parts3[0]);
+            //string[] parts2 = lines[startindex - 2].Split(" ");
+            //string[] parts3 = lines[startindex - 1].Split(" ");
+            //int xdepot = Convert.ToInt32(parts2[0]);
+            //int ydepot = Convert.ToInt32(parts3[0]);
 
-            Package2D depot = new Package2D(xdepot, ydepot);
-            depot.Indexes.Add("Depot", 0);
-            Depot = depot;
+            //Package2D depot = new Package2D(xdepot, ydepot);
+            //depot.Indexes.Add("Depot", 0);
+            //Depot = depot;
+
+
+        }
+        return;
+    }
+    public void ReadLoad2() //for instances with id 
+    {
+        List<Point> points = new List<Point>();
+        if (Input.Length > 0)
+        {
+            List<string> lines = new List<string>();
+            using (StreamReader reader = new StreamReader(Input))
+            {
+
+
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    // Insert logic here.
+                    // ... The "line" variable is a line in the file.
+                    // ... Add it to our List.
+                    lines.Add(line);
+                }
+            }
+
+            int startindex = 2;
+            //for (int i = 2; i < lines.Count; i++)
+            //{
+            //    if (lines[i].StartsWith("1") | lines[i].StartsWith("01"))
+            //    {
+            //        startindex = i;
+            //        break;
+            //    }
+            //}
+            for (int i = startindex; i < lines.Count; i++)
+            {
+
+                string input = Regex.Replace(lines[i], @"\s\s+", " ").Trim();
+
+                //string[] parts = lines[i].Split(" ");
+                string[] parts = input.Split(" ");
+                int x = Convert.ToInt32(parts[0]);
+                int y = Convert.ToInt32(parts[1]);
+
+                Package2D p = new Package2D(x, y);
+                p.Indexes.Add("Instance", Convert.ToInt32(i-startindex+1));
+                Packagelist.Add(p);
+
+            }
+            //string[] parts2 = lines[startindex - 2].Split(" ");
+            //string[] parts3 = lines[startindex - 1].Split(" ");
+            //int xdepot = Convert.ToInt32(parts2[0]);
+            //int ydepot = Convert.ToInt32(parts3[0]);
+
+            //Package2D depot = new Package2D(xdepot, ydepot);
+            //depot.Indexes.Add("Depot", 0);
+            //Depot = depot;
 
 
         }
         return;
 
+
     }
 }
+
+
+    
