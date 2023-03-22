@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +14,8 @@ class Program
 {
     public static void Main(string[] args)
     {
-        string filepath = @"C:\classes\masterarbeit\instances\daniel\Burke\n11.txt";
+        string filepath = @"C:\classes\masterarbeit\instances\daniel\Burke\n13.txt";
+        //"C:\classes\masterarbeit\instances\daniel\Burke\n12 -formatted.txt"
         //@"C:\classes\masterarbeit\instances\daniel\Burke\n11.txt";
         //"C:\classes\masterarbeit\instances\N_T\N_T\T7e.ins2D"
         //"C:\classes\masterarbeit\instances\daniel\Burke\n13.txt"
@@ -24,13 +26,17 @@ class Program
        
         Extreme_Algorithms algos = new Extreme_Algorithms();
         algos.Input_packages = fhandler.Packagelist.ToList();
-        //algos.Input_Analysis();
-        algos.Main_OffURPrep();
-        Console.WriteLine("WHERE THE MAGIC HAPPENS");
+        algos.Input_Analysis();
+        Stopwatch timer = new Stopwatch();
+        timer.Start();
+        algos.Large_OffUOPrep();
+        timer.Stop();
+        Console.WriteLine("Took this much time: " + timer.ElapsedMilliseconds);
         fhandler.Loadorder.Clear();
         fhandler.Loadorder.AddRange(algos.Load_order.ToList());
       
         fhandler.Createfiles();
+        Console.WriteLine($"The Height is: {algos.StripHeight}");
 
        
 

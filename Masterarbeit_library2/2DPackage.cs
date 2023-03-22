@@ -395,78 +395,7 @@ public class ExtremePoint : Point2D
         Vertex2D v3 = Initial_Space.Vertixes.Where(x => x.ID == "v3").ToList()[0]; Space.Add(new Rule(v3, this));
         if (relevantvertices.Count > 0) //there must be some vertices as we dont load in the air
         {
-            //bool realv2 = false;//in case the v1 and v4 are perfectly covered, the reality of v2 and v3 come into question
-            //bool realv3 = false;
-            //Vertex2D v1 = Initial_Space.Vertixes.Where(x => x.ID == "v1").ToList()[0];
 
-            //Vertex2D v4 = Initial_Space.Vertixes.Where(x => x.ID == "v4").ToList()[0];
-            //List<Vertex2D> relevanthorizontal = algo.Fetchcollinear_vertices(relevantvertices, v1, "Horizontal");
-            //List<Vertex2D> relevantvertical = algo.Fetchcollinear_vertices(relevantvertices, v4, "Vertical");
-            //if (relevanthorizontal.Count > 1 | relevantvertical.Count > 1) { Errorlog.Add("Multiple vertices crossing Epoint"); } //should only be one vertex in each direction
-            ////VERTEX 1 Real
-            //if (relevanthorizontal.Count != 0)
-            //{
-            //    if ((relevanthorizontal[0].P2.X >= v1.P2.X) && (relevanthorizontal[0].P1.X <= v1.P1.X))//1 new one overcovers
-            //    {
-            //        Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
-            //        new Tuple<Point2D, Point2D>(v1.P1, v1.P2);
-            //        if (relevanthorizontal[0].P2.X == v1.P2.X) { realv2 = true; }
-            //    }
-            //    else if ((relevanthorizontal[0].P2.X < v1.P2.X) && (relevanthorizontal[0].P1.X <= v1.P1.X))//2 new one is shorter at the end
-            //    {
-            //        Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
-            //        new Tuple<Point2D, Point2D>(v1.P1, relevanthorizontal[0].P2);
-            //    }
-            //    else if ((relevanthorizontal[0].P2.X >= v1.P2.X) && (relevanthorizontal[0].P1.X >= v1.P1.X))//3 new one is shorter at the end
-            //    {
-            //        Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
-            //        new Tuple<Point2D, Point2D>(relevanthorizontal[0].P1, v1.P2);
-            //    }
-            //    else if ((relevanthorizontal[0].P2.X < v1.P2.X) && (relevanthorizontal[0].P1.X >= v1.P1.X))//4 new one is closer to origin on both ends
-            //    {
-            //        Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
-            //        new Tuple<Point2D, Point2D>(relevanthorizontal[0].P1, relevanthorizontal[0].P2);
-            //    }
-
-            //}
-            //else if (relevanthorizontal.Count == 0)
-            //{
-            //    Initial_Space.Vertixes.Where(x => x.ID == "v1").First().Realsection =
-            //        new Tuple<Point2D, Point2D>(new Point2D(0, 0, 0), new Point2D(0, 0, 0));
-            //}
-            ////VERTEX 4 Real
-            //if (relevantvertical.Count != 0)
-            //{
-            //    if ((relevantvertical[0].P2.Y >= v4.P2.Y) && (relevantvertical[0].P1.Y <= v4.P1.Y)) //1
-            //    {
-            //        Initial_Space.Vertixes.Where(x => x.ID == "v4").First().Realsection =
-            //        new Tuple<Point2D, Point2D>(v4.P1, v4.P2);
-            //        if (relevantvertical[0].P2.Y == v4.P2.Y) { realv3 = true; }
-            //    }
-            //    else if ((relevantvertical[0].P2.Y < v4.P2.Y) && (relevantvertical[0].P1.Y <= v4.P1.Y))//2
-            //    {
-            //        Initial_Space.Vertixes.Where(x => x.ID == "v4").First().Realsection =
-            //        new Tuple<Point2D, Point2D>(v4.P1, relevantvertical[0].P2);
-            //    }
-            //    else if ((relevantvertical[0].P2.Y >= v4.P2.Y) && (relevantvertical[0].P1.Y >= v4.P1.Y))//3
-            //    {
-            //        Initial_Space.Vertixes.Where(x => x.ID == "v4").First().Realsection =
-            //        new Tuple<Point2D, Point2D>(relevantvertical[0].P1, v4.P2);
-            //    }
-            //    else if ((relevantvertical[0].P2.Y < v4.P2.Y) && (relevantvertical[0].P1.Y >= v4.P1.Y))//4
-            //    {
-            //        Initial_Space.Vertixes.Where(x => x.ID == "v4").First().Realsection =
-            //        new Tuple<Point2D, Point2D>(relevantvertical[0].P1, relevantvertical[0].P2);
-            //    }
-
-            //}
-            //else if (relevantvertical.Count == 0)
-            //{
-            //    Initial_Space.Vertixes.Where(x => x.ID == "v4").First().Realsection =
-            //        new Tuple<Point2D, Point2D>(new Point2D(0, 0, 0), new Point2D(0, 0, 0));
-            //}
-
-            //all the other vertices
 
             foreach (Vertex2D v in relevantvertices) //note that rules omit collinearity on bottom and left
             {
@@ -566,8 +495,9 @@ public class Rule
                 {
                     case "Horizontal":
                         {
-
-                            if ((Rulevertex.P1.X <= p.X && p.X <= Rulevertex.P2.X) |
+                            if (((p.Index == 2) | (p.Index == 3)) &&(Rulevertex.P1.X == p.X)){ break; }
+                            else if ((p.Index == 4) && (Rulevertex.P2.X == p.X)) { break; }
+                            else if ((Rulevertex.P1.X <= p.X && p.X <= Rulevertex.P2.X) |
                                 (Rulevertex.P1.X >= p.X && p.X >= Rulevertex.P2.X))
                             {
                                 if (Rulevertex.P1.Y < p.Y) //if point is outside
@@ -581,8 +511,9 @@ public class Rule
                         }
                     case "Vertical":
                         {
-
-                            if ((Rulevertex.P1.Y <= p.Y && p.Y <= Rulevertex.P2.Y) |
+                            if ((p.Index == 2) && (Rulevertex.P2.Y == p.Y)) { break; }
+                            else if (((p.Index == 4) | (p.Index == 3)) && (Rulevertex.P1.Y == p.Y)) { break; }
+                            else if ((Rulevertex.P1.Y <= p.Y && p.Y <= Rulevertex.P2.Y) |
                                 (Rulevertex.P1.Y >= p.Y && p.Y >= Rulevertex.P2.Y))
                             {
                                 if (Rulevertex.P1.X < p.X) //if point is outside
