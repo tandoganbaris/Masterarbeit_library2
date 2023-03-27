@@ -40,6 +40,9 @@ public class Package2D
     public int LengthOG { get; set; } //OG refers to original for resetting
     public int Width { get; set; } //y
     public int WidthOG { get; set; }
+    public int Largestdim { get; set; }
+    public int Priority { get; set; } = 0;
+    public int Perimeter { get; set; }
     public double Weight { get; set; }
     public string Size { get; set; }
 
@@ -71,12 +74,14 @@ public class Package2D
         LengthOG = length;
         Width = width;
         WidthOG = width;
-
+        Volume = LengthOG * WidthOG;
+        Largestdim = (LengthOG > WidthOG ? LengthOG : WidthOG);
+        Perimeter = (LengthOG * 2) + (WidthOG* 2);
 
         Pointslist = new List<Point2D>();
         if (length > 0 && width > 0)
         {
-            Volume = length * width;
+            //Volume = length * width;
             int startingindex = 1;
             while (Pointslist.Count < 4)
             {

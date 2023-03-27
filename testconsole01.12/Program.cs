@@ -14,7 +14,7 @@ class Program
 {
     public static void Main(string[] args)
     {
-        string filepath = @"C:\classes\masterarbeit\instances\daniel\Burke\n13.txt";
+        string filepath = @"C:\classes\masterarbeit\instances\daniel\Burke\n5-formatted.txt";
         //"C:\classes\masterarbeit\instances\daniel\Burke\n12 -formatted.txt"
         //@"C:\classes\masterarbeit\instances\daniel\Burke\n11.txt";
         //"C:\classes\masterarbeit\instances\N_T\N_T\T7e.ins2D"
@@ -29,7 +29,7 @@ class Program
         algos.Input_Analysis();
         Stopwatch timer = new Stopwatch();
         timer.Start();
-        algos.Large_OffUOPrep();
+        algos.Main_OffUR2();
         timer.Stop();
         Console.WriteLine("Took this much time: " + timer.ElapsedMilliseconds);
         fhandler.Loadorder.Clear();
