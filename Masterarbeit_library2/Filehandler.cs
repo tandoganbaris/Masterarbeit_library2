@@ -29,9 +29,29 @@ public class Filehandler
 
         }
     }
+
+    public string GetUntilOrEmpty(string text, string stopAt = "-")
+    {
+        if (!String.IsNullOrWhiteSpace(text))
+        {
+            int charLocation = text.IndexOf(stopAt, StringComparison.Ordinal);
+
+            if (charLocation > 0)
+            {
+                return text.Substring(0, charLocation);
+            }
+        }
+
+        return String.Empty;
+    }
+
     public void Createfiles() // csv helper josh close
     {
-        string filename = $"testload{4}.csv";
+        string input = Regex.Replace(Input, @"\s\s+", " ").Trim();
+        string[] parts = input.Split("\\");
+        string namepart = GetUntilOrEmpty(parts[parts.Length - 1], ".");
+        string filename = $"{namepart}.csv";
+        //string filename = $"testload{4}.{namepart}.csv";
         string path = Path.Combine(Output, filename);
         using (var writer = new StreamWriter(path))
         using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
@@ -163,7 +183,7 @@ public class Filehandler
                 int y = Convert.ToInt32(parts[1]);
 
                 Package2D p = new Package2D(x, y);
-                p.Indexes.Add("Instance", Convert.ToInt32(i-startindex+1));
+                p.Indexes.Add("Instance", Convert.ToInt32(i - startindex + 1));
                 Packagelist.Add(p);
 
             }
@@ -185,4 +205,4 @@ public class Filehandler
 }
 
 
-    
+
