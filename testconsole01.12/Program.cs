@@ -14,7 +14,7 @@ class Program
 {
     public static void Main(string[] args)
     {
-        string filepath = @"C:\classes\masterarbeit\instances\c\c\C4\C4_1.txt";
+        string filepath = @"C:\classes\masterarbeit\instances\daniel\Burke\n9-formatted.txt";
         //"C:\classes\masterarbeit\instances\c\c\C7\C7_3.txt"
         //"C:\classes\masterarbeit\instances\daniel\babu\babu.txt"
         //"C:\classes\masterarbeit\instances\daniel\Burke\n12 -formatted.txt"

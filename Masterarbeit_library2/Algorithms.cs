@@ -35,13 +35,13 @@ public class Extreme_Algorithms
     public int StripHeight { get; set; } = 0;
     public double Largestvol { get; set; }
     public int Multiplier { get; set; } = 1;
-    public int Opt { get; set; } =40;
+    public int Opt { get; set; } = 150;
     public List<string> Errorlog { get; set; } = new List<string>();
     public List<Package2D> Input_packages { get; set; } = new List<Package2D>();
     public List<Package2D> Load_order { get; set; } = new List<Package2D>();
     public List<Vertex2D> Virtual_Vertices { get; set; } = new List<Vertex2D>();
     public Dictionary<Point2D, MasterRule> Rules { get; set; } = new Dictionary<Point2D, MasterRule>();
-    public Package2D Bin { get; set; } = new Package2D(60, 100); //needs to be adjusted
+    public Package2D Bin { get; set; } = new Package2D(50, 200); //needs to be adjusted
     public Random rnd = new Random();
 
 
@@ -1086,10 +1086,10 @@ public class Extreme_Algorithms
             loadorder.Add(chosenpack);
             MasterRule r2 = new MasterRule(chosenpack);
             Rules.Add(r2.Center, r2);
-            if (chosenpack.Indexes["Instance"] == 85)//p. && 
-            {
-                string here = string.Empty;
-            }
+            //if (chosenpack.Indexes["Instance"] == 8)//p. && 
+            //{
+            //    string here = string.Empty;
+            //}
             Refresh_ExtremePoints(chosenpack, chosenE);
             Refresh_Vertices(chosenpack, chosenE);
             FitnessList.Clear();
@@ -1750,10 +1750,10 @@ public class Extreme_Algorithms
         foreach (Package2D p in input)
         {
             if ((p.Width < p.Length) && (p.Length <= Bin.Width)) { p.Rotate(); }
-           //if ((p.Width > 4 * p.Length) && (p.Width <= Bin.Width)) { p.Rotationallowance["XY"] = false; }
+            if ((p.Width > 3* p.Length) && (p.Width <= Bin.Width)) { p.Rotationallowance["XY"] = false; }
         }
         //input = input.OrderByDescending(x => x.Width).ThenBy(x => x.Length).ToList(); //The Prep
-        input = input.OrderByDescending(x => x.Volume).ToList();
+        input = input.OrderByDescending(x => x.Largestdim).ToList();
         loadorder.Add(input[0]);
         loadorder[0].OverwritePosition(0, 0, 1); //set the bin
 
@@ -1785,7 +1785,7 @@ public class Extreme_Algorithms
                 Package2D current_pack_rotated = new Package2D(current_pack.Length, current_pack.Width);
                 current_pack_rotated.Indexes.Add("Instance", current_pack.Indexes["Instance"]);
                 current_pack_rotated.OverwritePosition(E.X, E.Y, 1);
-                //if (current_pack.Indexes["Instance"] == 324)// && E.X == 18 && E.Y == 301)
+                //if (current_pack.Indexes["Instance"] == 14 && E.X == 16 && E.Y == 13)
                 //{
                 //    string here = string.Empty;
                 //}
@@ -1865,10 +1865,10 @@ public class Extreme_Algorithms
             loadorder.Add(chosenpack);
             MasterRule r2 = new MasterRule(chosenpack);
             Rules.Add(r2.Center, r2);
-            if (chosenpack.Indexes["Instance"] == 50)//p. && 
-            {
-                string here = string.Empty;
-            }
+            //if (chosenpack.Indexes["Instance"] == 80)//p. && 
+            //{
+            //    string here = string.Empty;
+            //}
             Refresh_ExtremePoints(chosenpack, chosenE);
             Refresh_Vertices(chosenpack, chosenE);
             FitnessList.Clear();
@@ -1884,6 +1884,10 @@ public class Extreme_Algorithms
 
     public List<Vertex2D> Fetchrelevant_vertices(ExtremePoint E) //returns vertices inside the packing space.
     {
+        //if (E.X == 0 && E.Y ==32)//p. && 
+        //{
+        //    string here = string.Empty;
+        //}
         //Right side in: the right side of the vertex is within the bounds while the left point is outside
         //left side in: the left side of the vertex is within the bounds while the right point is outside
         //both side in: both sides of the vertex are within the bounds 
@@ -2911,9 +2915,9 @@ public class Extreme_Algorithms
     {
 
         double output = 0;
-        double a1 =3 ; double a2 = 5; double a3 = 2; double a4 = 4; double beta = 30; double gamma =30; // 8;4;2;4;30;30 
+        double a1 = 4; double a2 = 4; double a3 = 2; double a4 = 4; double beta = 30; double gamma = 30; // 8;4;2;4;30;30 
         double priority = p.Priority; //if the package is larger than width of bin
-        double overlaps = 0; double heightvalue = 0; double penalties = 0; double rewards = 0; bool rewarding =false; bool penalizing = true;
+        double overlaps = 0; double heightvalue = 0; double penalties = 0; double rewards = 0; bool rewarding = false; bool penalizing = true;
         bool volumeuse = false;
         Vertex2D v1 = p.Vertixes.Where(x => x.ID == "v1").ToList()[0];
         Vertex2D v2 = p.Vertixes.Where(x => x.ID == "v2").ToList()[0];
@@ -2936,7 +2940,7 @@ public class Extreme_Algorithms
                         { bottom += a1 * (b.P2.X - v1.P1.X) / Chosen_maxdim; }
                         else if ((b.P1.X >= v1.P1.X) && (b.P2.X >= v1.P2.X)) //in but shorter c0.p1-c0.p2
                         { bottom += a1 * (v1.P2.X - b.P1.X) / Chosen_maxdim; }
-                        else if ((b.P1.X > v1.P1.X) && (b.P2.X > v1.P2.X)) //going out from the right c0.p1-v1.p2
+                        else if ((b.P1.X >= v1.P1.X) && (b.P2.X > v1.P2.X)) //going out from the right c0.p1-v1.p2
                         { bottom += a1 * (v1.P2.X - b.P1.X) / Chosen_maxdim; }
                     }
                     if ((b.P2.X == v1.P2.X) && (b.P1.X == v1.P1.X) && (rewarding))
@@ -3045,7 +3049,7 @@ public class Extreme_Algorithms
                     }
                     else if ((rs.P2.Y == v2.P2.Y) && (rewarding))
                     {
-                        rewards +=  0.2;
+                        rewards += 0.2;
                     }
                 }
             }
@@ -3060,10 +3064,14 @@ public class Extreme_Algorithms
         double y2 = orderedpoints.Last().Y;
         heightvalue = ((y1 - chosen.Y) / (y1 - y2)) * beta;// * (p.Volume * raisepercentage); OR * p.Volume
         if (!(heightvalue > 0)) { heightvalue = 0; } //Commenting this out speeds up the process by filling bottom first
-        if (volumeuse) { heightvalue *= (p.Volume); }
+        if (volumeuse)
+        {
+            heightvalue *= (p.Volume);/// Largestvol) + 1;
+        }
+        //rewards /= (raisepercentage+0.5);
         output = (overlaps + rewards + heightvalue + priority - penalties);
         return output;
-    } 
+    }
 
     public double Fitness_simple(Package2D p, ExtremePoint chosen)
     {
@@ -3247,13 +3255,14 @@ public class Extreme_Algorithms
             foreach (Package2D p in Input_packages)
             {
                 p.Width *= Multiplier; p.Length *= Multiplier;
+                p.Volume *= Multiplier * Multiplier;
 
             }
             Bin = new Package2D(Bin.Width * Multiplier, Bin.Length * Multiplier);
             Opt *= Multiplier; Chosen_maxdim *= Multiplier; Chosen_mindim *= Multiplier;
         }
 
-        Largestvol = Input_packages.OrderByDescending(x=>x.Volume).ToList().Last().Volume;
+        Largestvol = Input_packages.OrderByDescending(x => x.Volume).ToList().Last().Volume;
 
         return;
     }
@@ -3270,7 +3279,7 @@ public class Extreme_Algorithms
     public double PenaltyCurve(double x)
     {   //(3 / (3 + Math.Pow(Math.E, (-12 * x + 1 * Math.Pow(Math.E, 2))))); // Softer Curve
         //(3 / (3 + Math.Pow(Math.E, (-20 * x + 1 * Math.Pow(Math.E, 2.7))))); //Harder Curve
-        return (3 / (3 + Math.Pow(Math.E, (-20 * x + 1 * Math.Pow(Math.E, 2.7))))); //Harder Curve
+        return (3 / (3 + Math.Pow(Math.E, (-12 * x + 1 * Math.Pow(Math.E, 2))))); // Softer Curve
 
     }
     public double RatioDist(double x, double y)
