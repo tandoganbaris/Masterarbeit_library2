@@ -32,6 +32,15 @@ public class Extreme_Algorithms
     public List<ExtremePoint> Notallowed { get; set; } = new List<ExtremePoint>(); //used and destroyed extreme points
     public int Chosen_maxdim { get; set; } = 150;
     public int Chosen_mindim { get; set; } = 1;
+
+    public double A1 { get; set; } = 4;
+    public double A2 { get; set; } = 4;
+    public double A3 { get; set; } = 2;
+    public double A4 { get; set; } = 4;
+    public bool R { get; set; } = false;
+    public int Gamma { get; set; } = 30;
+    public int Beta { get; set; }= 30;
+    public bool VolumeUse { get; set; } = false;
     public int StripHeight { get; set; } = 0;
     public double Largestvol { get; set; }
     public int Multiplier { get; set; } = 1;
@@ -2915,10 +2924,10 @@ public class Extreme_Algorithms
     {
 
         double output = 0;
-        double a1 = 4; double a2 = 4; double a3 = 2; double a4 = 4; double beta = 30; double gamma = 30; // 8;4;2;4;30;30 
+        double a1 = A1; double a2 = A2; double a3 = A3; double a4 = A4; double beta = Beta; double gamma = Gamma; // 8;4;2;4;30;30 
         double priority = p.Priority; //if the package is larger than width of bin
-        double overlaps = 0; double heightvalue = 0; double penalties = 0; double rewards = 0; bool rewarding = false; bool penalizing = true;
-        bool volumeuse = false;
+        double overlaps = 0; double heightvalue = 0; double penalties = 0; double rewards = 0; bool rewarding = R; bool penalizing = true;
+        bool volumeuse = VolumeUse;
         Vertex2D v1 = p.Vertixes.Where(x => x.ID == "v1").ToList()[0];
         Vertex2D v2 = p.Vertixes.Where(x => x.ID == "v2").ToList()[0];
         Vertex2D v3 = p.Vertixes.Where(x => x.ID == "v3").ToList()[0];
@@ -3322,6 +3331,37 @@ public class Extreme_Algorithms
 
         return;
     }
+    public void Reset_Runs()
+    {
+        verticestoconsider.Clear();       
+        ActiveExtremePoints.Clear();       
+        Notallowed.Clear();       
+        Errorlog.Clear();
+        Load_order.Clear();
+        Virtual_Vertices.Clear();
+        Rules.Clear();
+
+        return;
+    }
+    public void Load_Parameters(Parameter[] parameters)
+    {
+        Reset_Runs();
+        A1 = Convert.ToDouble(parameters[0].CurrentParval);
+        A2 = Convert.ToDouble(parameters[1].CurrentParval);
+        A4 = Convert.ToDouble(parameters[2].CurrentParval);
+        A4 = Convert.ToDouble(parameters[3].CurrentParval);
+        R = Convert.ToBoolean(parameters[0].CurrentParval);
+        Opt = parameters[0].CurrentParval;
+
+        return;
+    }
+    public int RunNewPars(Parameter[] parameters)
+    {
+        Load_Parameters(parameters);
+        Main_OffURPrep();
+        return StripHeight;
+    }
+
 }
 public class MasterRule
 {
