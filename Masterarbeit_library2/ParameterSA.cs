@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Google.OrTools.ConstraintSolver;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -13,8 +15,9 @@ public class ParameterSA
     public Parameter[] initialparameters { get; set; } = new Parameter[] { };
     public int Bestval { get; set; }
     public double InitialTemp { get; set; }
+    public List<string> Output { get; set; } = new List<string> { };
 
-    public Dictionary<int, int> Neighborhood_sofar = new Dictionary<int, int>();
+    public Dictionary<int[], int> Neighborhood_sofar = new Dictionary<int[], int>();
     public Extreme_Algorithms Solver { get; set; }
     Random rnd = new Random();
     public ParameterSA(int[] parameters, Extreme_Algorithms algos)
@@ -23,8 +26,8 @@ public class ParameterSA
         Parameter a2 = new Parameter(parameters[1], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
         Parameter a3 = new Parameter(parameters[2], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5 }, 3, 0.1, 1);
         Parameter a4 = new Parameter(parameters[3], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
-        Parameter rewarding = new Parameter(parameters[4], algos.StripHeight, new int[] { 0, 1 }, 1, 0, 1);
-        Parameter opt = new Parameter(parameters[5], algos.StripHeight, new int[] { parameters[5] - 20, parameters[5] - 10, parameters[5], parameters[5] + 10, parameters[5] + 20 }, 3, 0.2, 1);
+        Parameter rewarding = new Parameter(parameters[4], algos.StripHeight, new int[] { 0, 1 }, 1, 0.1, 1);
+        Parameter opt = new Parameter(parameters[5], algos.StripHeight, new int[] { parameters[5] - 20, parameters[5] - 10, parameters[5], parameters[5] + 10, parameters[5] + 20 }, 3, 0.1, 1);
         initialparameters = new Parameter[] { a1, a2, a3, a4, rewarding, opt };
         Bestval = algos.StripHeight;
 
@@ -32,45 +35,52 @@ public class ParameterSA
         Add_globalhistory(initialparameters, Bestval);
 
     }
-    public int Par_asKey(Parameter[] parameters)
+    public int[] Par_asKey(Parameter[] parameters)
     {
-        string key = string.Empty;
-        foreach (Parameter p in parameters)
+        int[] parkey = new int[parameters.Length];
+        for(int i = 0; i<parameters.Length; i++)
         {
-            key.Concat(Convert.ToString(p.CurrentParval));
+
+            parkey[i] = parameters[i].CurrentParval;
         }
-        int parkey = int.Parse(key);
+      
 
         return parkey;
     }
 
-    public Parameter[] Key_asPar(int input, int objval)
+    public Parameter[] Key_asPar(int[] input, int objval)
     {
-        string inputasstring = input.ToString();
+  
+        //int a1val = Convert.ToInt32(inputasstring.First().ToString());
 
-        Parameter a1 = new Parameter((int)inputasstring[0], objval, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.3, 2); inputasstring = inputasstring.Substring(1);
-        Parameter a2 = new Parameter((int)inputasstring[0], objval, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2); inputasstring = inputasstring.Substring(1);
-        Parameter a3 = new Parameter((int)inputasstring[0], objval, new int[] { 0, 1, 2, 3, 4, 5 }, 3, 0.1, 1); inputasstring = inputasstring.Substring(1);
-        Parameter a4 = new Parameter((int)inputasstring[0], objval, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2); inputasstring = inputasstring.Substring(1);
-        Parameter rewarding = new Parameter((int)inputasstring[0], objval, new int[] { 0, 1 }, 1, 0, 1); inputasstring = inputasstring.Substring(1);
-        Parameter opt = new Parameter((int)input, objval, new int[] { (int)input - 20, (int)input - 10, (int)input, (int)input + 10, (int)input + 20 }, 3, 0.2, 1);
+        Parameter a1 = new Parameter(input[0], objval, initialparameters[0].Range, 5, 0.3, 2);
+        Parameter a2 = new Parameter(input[1], objval, initialparameters[1].Range, 5, 0.2, 2); 
+        Parameter a3 = new Parameter(input[2], objval, initialparameters[2].Range, 3, 0.1, 1); 
+        Parameter a4 = new Parameter(input[3], objval, initialparameters[3].Range, 5, 0.2, 2); 
+        Parameter rewarding = new Parameter(input[4], objval, initialparameters[4].Range, 1, 0.1, 1); 
+
+        Parameter opt = new Parameter(input[5], objval, initialparameters[5].Range, 3, 0.1, 1);
         Parameter[] output = new Parameter[] { a1, a2, a3, a4, rewarding, opt };
 
+        if (output.Last().CurrentParval == 0)
+        {
+            string here = string.Empty;
+        }
         return output;
 
     }
     public Parameter[] Random_Par()
     {
-   
 
-        Parameter a1 = new Parameter(rnd.Next(0,10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.3, 2);
-        Parameter a2 = new Parameter(rnd.Next(0, 10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2); 
-        Parameter a3 = new Parameter(rnd.Next(0, 10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5 }, 3, 0.1, 1); 
-        Parameter a4 = new Parameter(rnd.Next(0, 10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2); 
-        Parameter rewarding = new Parameter(rnd.Next(0, 10), int.MaxValue,  new int[] { 0, 1 }, 1, 0, 1);
-        int inputopt = initialparameters.Last().CurrentParval;
-        int[] optval = new int[] { inputopt - 20, inputopt - 10, inputopt, inputopt + 10, inputopt + 20 };
-        Parameter opt = new Parameter(optval[rnd.Next(0,optval.Length)], int.MaxValue, optval, 3, 0.2, 1);
+
+        Parameter a1 = new Parameter(rnd.Next(0, 10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.3, 2);
+        Parameter a2 = new Parameter(rnd.Next(0, 10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
+        Parameter a3 = new Parameter(rnd.Next(0, 6), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5 }, 3, 0.1, 1);
+        Parameter a4 = new Parameter(rnd.Next(0, 10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
+        Parameter rewarding = new Parameter(rnd.Next(0, 2), int.MaxValue, new int[] { 0, 1 }, 1, 0.1, 1);
+        //int inputopt = initialparameters.Last().CurrentParval;
+        //int[] optval = new int[] { inputopt - 20, inputopt - 10, inputopt, inputopt + 10, inputopt + 20 };
+        Parameter opt = new Parameter(initialparameters[5].Range[rnd.Next(initialparameters[5].Range.Length)], int.MaxValue, initialparameters[5].Range, 3, 0.1, 1);
         Parameter[] output = new Parameter[] { a1, a2, a3, a4, rewarding, opt };
 
         return output;
@@ -80,11 +90,12 @@ public class ParameterSA
     {
 
 
-        int parkey = Par_asKey(parameters.ToArray());
+        int[] parkey = Par_asKey(parameters.ToArray());
 
         Neighborhood_sofar.Add(parkey, objval);
     }
 
+ 
     public void SA()
     {
         int iteration = 0;
@@ -98,9 +109,9 @@ public class ParameterSA
         while (iteration < limit)
         {
             int incumbentobjvalcopy = (int)incumbentobjval;
-            Parameter[] par_internalcopy = par_internal.ToArray();
+            Parameter[] par_internalcopy = (Parameter[])par_internal.Clone(); // par_internal.ToArray();
             LS(ref par_internalcopy, ref incumbentobjvalcopy, Temperature); //do local search
-            int Key_value = Par_asKey(par_internal);
+            int[] Key_value = Par_asKey(par_internal);
             if (!Neighborhood_sofar.ContainsKey(Key_value)) { Add_globalhistory(par_internal, incumbentobjval); } //add to history 
             if (incumbentobjvalcopy < incumbentobjval)
             {
@@ -111,17 +122,18 @@ public class ParameterSA
             {
                 double decision = rnd.NextDouble();
                 double diff = Convert.ToDouble(incumbentobjvalcopy - incumbentobjval);
-                double currentstate = Math.Pow(Math.E, (-diff/Temperature));
-                if(decision<= currentstate)
+                double currentstate = Math.Pow(Math.E, (-diff / Temperature));
+                if (decision <= currentstate)
                 {
                     incumbentobjval = incumbentobjvalcopy;
                     par_internal = par_internalcopy;
                 }
                 else
                 {
-                    if(Neighborhood_sofar.Keys.Count>20)//choose random neighbor
-                    { int index = rnd.Next(0, Neighborhood_sofar.Keys.Count);
-                        int key = Neighborhood_sofar.ElementAt(index).Key ;
+                    if (Neighborhood_sofar.Keys.Count > 20)//choose random neighbor
+                    {
+                        int index = rnd.Next(0, Neighborhood_sofar.Keys.Count);
+                        int[] key = Neighborhood_sofar.ElementAt(index).Key;
                         int val = Neighborhood_sofar.ElementAt(index).Value;
                         Parameter[] randomneighbor = Key_asPar(key, val);
                         incumbentobjval = val;
@@ -136,20 +148,30 @@ public class ParameterSA
                     }
                 }
             }
-           
-            
+            iteration++;
+            string parstring = String.Join(",", Par_asKey(par_internal).Select(p => p.ToString()).ToArray());
+            //Output.Add("Parameters: " + parstring.PadRight(13) + "Obj val: ".PadLeft(10) + incumbentobjvalcopy.ToString());
+            Console.WriteLine("Parameters: " + parstring.PadRight(13) + "Obj val: ".PadLeft(10) + incumbentobjvalcopy.ToString());
         }
+
         return;
     }
-    public void LS(ref Parameter[] parameters,  ref int currentval, double Temperature)
+    public void LS(ref Parameter[] parameters, ref int currentval, double Temperature)
     {
-        Parameter[] par_copy = parameters.ToArray();
+        Parameter[] par_copy = (Parameter[])parameters.Clone();
         int internal_Bestval = currentval;
+        Dictionary<int, List<int[]>> Neighborhood_LS = new Dictionary<int, List<int[]>>(); // obj and parkey
+        int[] parkeyinit = Par_asKey(parameters.ToArray());
+        //Neighborhood_LS.Add(currentval, new List<int[]> { parkeyinit });
+        List<Parameter[]> Samevalpars = new List<Parameter[]>();
+        int samevalval = 0;
         Parameter[] Bestarray = par_copy.ToArray();
-        while (par_copy.Where(x => x.LSround_completed != true).ToArray().Length > 0)
+        bool unbrokenloop = true;
+        while (unbrokenloop)
         {
             double choice = rnd.NextDouble();
             int index = Choose(par_copy.ToArray(), choice);
+            if(index == int.MaxValue) { unbrokenloop= false; break; }
             int iteration = 0;
             int maxiteration = par_copy[index].Iterations_allowed;
             int direction = rnd.Next(0, 2); //eiher 0 minus or 1 plus
@@ -158,13 +180,27 @@ public class ParameterSA
             while (iteration < maxiteration)
             {
 
-                int oldobj = par_copy[index].CurrentObjval;
+                int oldobj = currentval;//par_copy[index].CurrentObjval;
+             
+                int[] par_copy_copy = Par_asKey(par_copy.ToArray());
+               
                 par_copy[index].UpdateVal(direction, stepsize);
-                int newobj = Solver.RunNewPars(par_copy);
+                
+                int newobj = Solver.RunNewPars(par_copy.ToArray());
                 par_copy[index].CurrentObjval = newobj;
+                int[] parkey = Par_asKey(par_copy.ToArray());
 
+
+
+                if (!(Neighborhood_LS.ContainsKey(newobj)))
+                {
+                    Neighborhood_LS.Add(newobj, new List<int[]> { parkey });
+                }
+                else { Neighborhood_LS[newobj].Add(parkey); }
                 if (newobj < oldobj)//if better
                 {
+                    Samevalpars.Clear();
+                    samevalval = 0;
 
                     if (newobj < internal_Bestval)
                     {
@@ -174,7 +210,9 @@ public class ParameterSA
                         {
                             Bestval = newobj;
                             Add_globalhistory(par_copy.ToArray(), Bestval);
-                            iteration = maxiteration; break;
+                            iteration = maxiteration;
+                            foreach (Parameter p in par_copy) { p.LSround_completed = true; }
+                            break;
                         }
 
                     }
@@ -184,12 +222,16 @@ public class ParameterSA
                     }
                 }
                 else if (newobj == oldobj)//if same
-                {   
+                {
+                    samevalval = oldobj;
+                    Samevalpars.Add(par_copy.ToArray());
+                    if (Samevalpars.Count > 4) { iteration = maxiteration; break; }
+
                     double whattodo = (Temperature / InitialTemp);
                     if (whattodo < 0.60) //we are entering if temp is under 50 percent of initial
-                    {                      
-                        
-                        int refusalmove = rnd.Next(0, 10); //randomly choose whether to change direction 
+                    {
+
+                        int refusalmove = rnd.Next(0, 2); //randomly choose whether to change direction 
                         if (refusalmove == 0)
                         {
                             par_copy[index].UndoLast();
@@ -204,8 +246,8 @@ public class ParameterSA
                             }
                         }
                     }
-                    else { if (stepsize > 1) { stepsize--; }}
-                    
+                    else { if (stepsize > 1) { stepsize--; } }
+
                 }
                 else if (oldobj < newobj)//if worse
                 {    //choose what to do depending on temperature
@@ -223,7 +265,7 @@ public class ParameterSA
                             {
                                 stepsize++;
                             }
-                            else if ((refusalmove == 1) &&(directionchange !=0)) //if direction has been changed on this parameter in this round so far we force step increase
+                            else if ((refusalmove == 1) && (directionchange != 0)) //if direction has been changed on this parameter in this round so far we force step increase
                             {
 
                                 stepsize++;
@@ -244,7 +286,7 @@ public class ParameterSA
                         }
                         else //if step increase is not an option
                         {
-                            if(stepsize > 1) { stepsize --; }
+                            if (stepsize > 1) { stepsize--; }
                             if (directionchange == 0) //if direction has never been changed on this parameter in this round so far
                             {
                                 direction = direction == 0 ? 1 : 0;
@@ -265,49 +307,86 @@ public class ParameterSA
 
             }
             par_copy[index].LSround_completed = true;
+            
+        }
+        //if (Neighborhood_LS.Keys.Count > 1)
+        //{   
+        //    Neighborhood_LS.Remove(Neighborhood_LS.First().Key);
+        //    int index = rnd.Next(0, Neighborhood_LS.First().Value.Count);
+        //    List<int[]> chosenlist = Neighborhood_LS.First().Value;
+        //    int[] parkey = chosenlist[index];
+        //    Bestarray = Key_asPar(parkey, Neighborhood_LS.First().Key);
+        //    currentval = Neighborhood_LS.First().Key;
+        //}
+        //else
+        //{
+    
+            int index2 = rnd.Next(0, Neighborhood_LS.First().Value.Count);
+            List<int[]> chosenlist = Neighborhood_LS.First().Value;
+            int[] parkey2 = chosenlist[index2];
+            Bestarray = Key_asPar(parkey2, Neighborhood_LS.First().Key);
+            currentval = Neighborhood_LS.First().Key;
+        
+        //}
+        //foreach (Parameter p in Bestarray)
+        //{
+        //    p.LSround_completed = false;
+        //}
+        if (Bestarray.Last().CurrentParval == 0 || Bestarray.Last().CurrentParval < 80)
+        {
+            string here = string.Empty;
         }
         parameters = Bestarray.ToArray();
-        currentval = internal_Bestval;
+
         return;
 
-
     }
+
+
 
     public int Choose(Parameter[] parameters, double randomchoice)
     {
         SortedList<double, Parameter> SL = new SortedList<double, Parameter>();
-        Parameter[] internalpar = parameters.Where(x => x.LSround_completed != true).ToArray();
+        Parameter[] internalpar = (Parameter[])parameters.Where(x => x.LSround_completed != true).ToArray().Clone();
         double sf = 0;
         int index = 0;
-        foreach (Parameter p in internalpar)
+        int outindex = int.MaxValue;
+        if (internalpar.Length > 0)
         {
-            if (p.Quality != 0) { SL.Add(sf + p.Selection_Weight + p.Quality, p); }
-            else { SL.Add(sf + p.Selection_Weight, p); }
 
-        }
-
-        foreach (double key in SL.Keys)
-        {
-            SL.Keys[SL.Keys.IndexOf(key)] = key / SL.Keys.Last();
-        }
-        for (int i = 0; i < SL.Keys.Count - 1; i++)
-        {
-            if (SL.Keys[i + 1] >= randomchoice)
+            foreach (Parameter p in internalpar)
             {
-                index = i;
-                break;
-            }
-        }
-        Parameter output = SL.Values[index];
-        int outindex = Array.IndexOf(parameters, output);
+                sf = sf + p.Selection_Weight;
+                if (p.Quality != 0)
+                {
+                    sf += p.Quality;
+                    SL.Add(sf, p);
+                }
 
+                else { SL.Add(sf, p); }
+
+            }
+
+            randomchoice *= SL.Keys.Last();
+            for (int i = 0; i < SL.Keys.Count - 1; i++)
+            {
+                if (SL.Keys[i + 1] >= randomchoice)
+                {
+                    index = i;
+                    break;
+                }
+            }
+            Parameter output = SL.Values[index];
+            outindex = Array.IndexOf(parameters, output);
+        }
+        
 
         return outindex;
     }
 }
 public class Parameter
 {
-    public int CurrentParval { get; set; } = int.MaxValue;
+    public int CurrentParval { get; set; } = -1;
     public double Selection_Weight { get; set; } = 0;
     public int CurrentObjval { get; set; } = int.MaxValue; //after moving and running, this needs update
     public int HistoryLength { get; set; } = 10;
@@ -330,16 +409,19 @@ public class Parameter
         CurrentParval = input;
         CurrentObjval = currentobjval;
         Iterations_allowed = iterations_allowed;
+        Selection_Weight = selectionweight;
         Maxstepsize = maxstepsize;
     }
     public void UpdateVal(int direction, int stepsize)
     {
+
+
         switch (direction)
         {
             case 0: //minus
                 { //add to history, change current val, update average and quality, 
 
-                    if (CurrentObjval < History.Last().Value) { No_Improved++; }
+                    if ((History.Count != 0) && (CurrentObjval < History.Last().Value)) { No_Improved++; }
                     Archive(CurrentParval, CurrentObjval);
                     if (Array.IndexOf(Range, CurrentParval) >= stepsize)
                     {
@@ -360,7 +442,7 @@ public class Parameter
                 }
             case 1: //plus
                 {
-                    if (CurrentObjval < History.Last().Value) { No_Improved++; }
+                    if ((History.Count != 0) && (CurrentObjval < History.Last().Value)) { No_Improved++; }
                     Archive(CurrentParval, CurrentObjval);
                     if (Array.IndexOf(Range, CurrentParval) <= Range.Length - 1 - stepsize)
                     {
@@ -378,7 +460,17 @@ public class Parameter
                     break;
                 }
         }
+        //if (!Range.Contains(CurrentParval))
+        //{
+        //    string here = string.Empty;
+        //}
+
+
         return;
+    }
+    public override string ToString()
+    {
+        return this.CurrentParval.ToString();
     }
     public void UndoLast()
     {
@@ -386,17 +478,25 @@ public class Parameter
         CurrentParval = History.Last().Key;
         History.Remove(History.Last().Key);
 
+
     }
     public void Archive(int input, int objval)
     {
-        if (History.Keys.Count >= HistoryLength + 1)
+        if (!History.ContainsKey(input))
         {
-            History.Remove(History.First().Key);
-            History.Add(input, objval);
+            if (History.Keys.Count >= HistoryLength + 1)
+            {
+                History.Remove(History.First().Key);
+                History.Add(input, objval);
+            }
+            else
+            {
+                History.Add(input, objval);
+            }
         }
         else
         {
-            History.Add(input, objval);
+            if (History[input] > objval) { History[input] = objval; }
         }
     }
 }

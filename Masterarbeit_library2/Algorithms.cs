@@ -32,19 +32,19 @@ public class Extreme_Algorithms
     public List<ExtremePoint> Notallowed { get; set; } = new List<ExtremePoint>(); //used and destroyed extreme points
     public int Chosen_maxdim { get; set; } = 150;
     public int Chosen_mindim { get; set; } = 1;
-
-    public double A1 { get; set; } = 4;
-    public double A2 { get; set; } = 4;
-    public double A3 { get; set; } = 2;
-    public double A4 { get; set; } = 4;
-    public bool R { get; set; } = false;
+   
+    public double A1 { get; set; } = 5;
+    public double A2 { get; set; } = 5;
+    public double A3 { get; set; } = 3;
+    public double A4 { get; set; } = 5;
+    public bool R { get; set; } = true;
     public int Gamma { get; set; } = 30;
     public int Beta { get; set; }= 30;
     public bool VolumeUse { get; set; } = false;
     public int StripHeight { get; set; } = 0;
     public double Largestvol { get; set; }
-    public int Multiplier { get; set; } = 1;
-    public int Opt { get; set; } = 150;
+    public int Multiplier { get; set; } = 2;
+    public int Opt { get; set; } = 100;
     public List<string> Errorlog { get; set; } = new List<string>();
     public List<Package2D> Input_packages { get; set; } = new List<Package2D>();
     public List<Package2D> Load_order { get; set; } = new List<Package2D>();
@@ -52,8 +52,27 @@ public class Extreme_Algorithms
     public Dictionary<Point2D, MasterRule> Rules { get; set; } = new Dictionary<Point2D, MasterRule>();
     public Package2D Bin { get; set; } = new Package2D(50, 200); //needs to be adjusted
     public Random rnd = new Random();
-
-
+    public Extreme_Algorithms() { }
+    public void Copy_Object(Extreme_Algorithms input)
+    {
+        A1 = input.A1;
+        A2 = input.A2;
+        A3 = input.A3;
+        A4 = input.A4;
+        R = input.R;
+        Gamma= input.Gamma;
+        Beta = input.Beta;
+        VolumeUse= input.VolumeUse;
+        StripHeight = input.StripHeight;
+        Largestvol = input.Largestvol;
+        Multiplier = input.Multiplier;
+        Opt = input.Opt;
+        Bin = input.Bin;
+        Chosen_maxdim = input.Chosen_maxdim;
+        Chosen_mindim = input.Chosen_mindim;
+        return;
+        
+    }
     /// <summary>
     /// online input, placement is arbitrary, no rotation
     /// </summary>
@@ -3340,6 +3359,8 @@ public class Extreme_Algorithms
         Load_order.Clear();
         Virtual_Vertices.Clear();
         Rules.Clear();
+        StripHeight = 0;
+       // rnd = new Random(rnd.Next(int.MaxValue));
 
         return;
     }
@@ -3350,10 +3371,15 @@ public class Extreme_Algorithms
         A2 = Convert.ToDouble(parameters[1].CurrentParval);
         A4 = Convert.ToDouble(parameters[2].CurrentParval);
         A4 = Convert.ToDouble(parameters[3].CurrentParval);
-        R = Convert.ToBoolean(parameters[0].CurrentParval);
-        Opt = parameters[0].CurrentParval;
+        R = Convert.ToBoolean(parameters[4].CurrentParval);
+        Opt = parameters[5].CurrentParval;
 
         return;
+    }
+    public int[] Extract_Parameters()
+    { int rewarding = R ? 1 : 0;
+        int[] parameters = new int[] { (int)A1, (int)A2, (int)A3, (int)A4, rewarding, Opt };
+        return parameters;
     }
     public int RunNewPars(Parameter[] parameters)
     {
