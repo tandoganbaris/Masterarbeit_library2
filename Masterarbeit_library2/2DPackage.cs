@@ -18,7 +18,7 @@ public class Infoclassmap2 : ClassMap<Package2D>
         Map(x => x.Pointslist[3].CSVFormat()).Name("P4");
     }
 }
-public class Package2D
+public class Package2D : ICloneable
 {
 
 
@@ -150,6 +150,12 @@ public class Package2D
     public override string ToString()
     {
         return $"L: {Length.ToString().PadRight(4)}; W: {Width.ToString().PadRight(4)}; ID: {Indexes["Instance"].ToString().PadRight(5)} Loaded: {IsLoaded.ToString().PadRight(5)}";
+    }
+    public object Clone()
+    {
+        Package2D output = new Package2D(this.Width, this.Length);
+        output.Indexes.Add(this.Indexes.First().Key, this.Indexes.First().Value);
+        return output;
     }
 
     //Methods related to packages
@@ -371,7 +377,7 @@ public class Package2D
 
     }
 }
-public class ExtremePoint : Point2D
+public class ExtremePoint : Point2D , ICloneable
 {
     public List<Rule> Space = new List<Rule>(); //rules created from the chosen vertices
     public List<Vertex2D> Spatial_Vertices = new List<Vertex2D>(); //chosen vertices for the space
@@ -482,9 +488,14 @@ public class ExtremePoint : Point2D
         }
         return fits;
     }
+    public object Clone()
+    {
+        return this.MemberwiseClone();
+    }
+   
 }
 
-public class Rule
+public class Rule : ICloneable
 {
     public Vertex2D Rulevertex { get; set; }
     public ExtremePoint RulePoint { get; set; }
@@ -531,6 +542,7 @@ public class Rule
                             break;
                         }
                 }
+                if (!tester) { break; }
             }
 
         }
@@ -546,8 +558,13 @@ public class Rule
     {
         return this.Rulevertex.ToString();
     }
+    public object Clone()
+    {
+        return this.MemberwiseClone();
+    }
 }
-public class Point2D
+
+public class Point2D : ICloneable
 {
 
     public int X { get; set; }
@@ -573,10 +590,15 @@ public class Point2D
     {
         return $"({X}/{Y})";
     }
+    public object Clone()
+    {
+        Point2D output = new Point2D(this.X, this.Y, this.Index);
+        return output;
+    }
 }
 
 
-public class Vertex2D
+public class Vertex2D : ICloneable
 {
     //if horizontal p1.x < p2.x
     //if vertical p1.y < p2.y
@@ -585,7 +607,7 @@ public class Vertex2D
     public Point2D P1 { get; set; }
     public Point2D P2 { get; set; }
 
-    public Tuple<Point2D, Point2D> Realsection { get; set; } = new Tuple<Point2D, Point2D>(new Point2D(0, 0, 0), new Point2D(0, 0, 0));
+    
     public Tuple<Point2D, Point2D> Exposedsection { get; set; }
     public double Length { get; set; }
     public string Orientation { get; set; }
@@ -600,6 +622,11 @@ public class Vertex2D
     public override string ToString()
     {
         return $"P1: {P1.X}/{P1.Y}; P2: {P2.X}/{P2.Y}; Length: {Length}; Orientation: {Orientation}; ID: {ID}";
+    }
+    public object Clone()
+    {
+        Vertex2D Output = new Vertex2D(this.P1, this.P2, this.Orientation);
+        return Output;
     }
 
 }

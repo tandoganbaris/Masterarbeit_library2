@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace Masterarbeit_library2;
 
-public class Filehandler
+public class Filehandler : ICloneable
 {
     public int NumberOfFiles { get; set; } = 1;
     public string? Input { get; set; }
@@ -201,6 +201,11 @@ public class Filehandler
         return;
 
 
+    }
+
+    public object Clone()
+    {
+        return this.MemberwiseClone();
     }
 }
 
