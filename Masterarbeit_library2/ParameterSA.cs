@@ -13,8 +13,10 @@ public class ParameterSA : ICloneable
 {
     public ParameterSA() { }
     internal Parameter[] initialparameters { get; set; } = new Parameter[] { };
-    public int Bestval { get; set; }
+    public int Bestval { get; set; } = int.MaxValue;
+    public Parameter[] bestparameters { get; set; } = new Parameter[] { };
     public double InitialTemp { get; set; }
+    public double PenatlyRange { get; set; } = 0.03;//0.06
     public List<string> Output { get; set; } = new List<string> { };
 
     public Dictionary<int[], int> Neighborhood_sofar = new Dictionary<int[], int>();
@@ -27,7 +29,7 @@ public class ParameterSA : ICloneable
         Parameter a3 = new Parameter(parameters[2], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5 }, 3, 0.1, 1);
         Parameter a4 = new Parameter(parameters[3], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
         Parameter rewarding = new Parameter(parameters[4], algos.StripHeight, new int[] { 0, 1 }, 1, 0.1, 1);
-        Parameter opt = new Parameter(parameters[5], algos.StripHeight, new int[] { (int)(parameters[5] * 0.88), (int)(parameters[5] * 0.94), parameters[5], (int)(parameters[5] * 1.06), (int)(parameters[5] * 1.12) }, 3, 0.1, 1);
+        Parameter opt = new Parameter(parameters[5], algos.StripHeight, new int[] { (int)(parameters[5] * (1 - 2 * PenatlyRange)), (int)(parameters[5] * (1 - PenatlyRange)), parameters[5], (int)(parameters[5] * (1 + PenatlyRange)), (int)(parameters[5] * (1 + 2 * PenatlyRange)) }, 3, 0.1, 1);
         initialparameters = new Parameter[] { a1, a2, a3, a4, rewarding, opt };
         Bestval = algos.StripHeight;
 
@@ -98,13 +100,14 @@ public class ParameterSA : ICloneable
 
     public void SA()
     {
+        Bestval = int.MaxValue;
         int iteration = 0;
-        int limit = 100;
+        int limit = 1000;
         double Temperature = 5;
         InitialTemp = Temperature;
         double alpha = 0.95;
         Parameter[] par_internal = initialparameters.ToArray();
-        int startobjval = Bestval;
+        //int startobjval = Bestval;
         int incumbentobjval = Bestval;
         while (iteration < limit)
         {
@@ -113,10 +116,18 @@ public class ParameterSA : ICloneable
             LS(ref par_internalcopy, ref incumbentobjvalcopy, Temperature); //do local search
             int[] Key_value = Par_asKey(par_internal);
             if (!Neighborhood_sofar.ContainsKey(Key_value)) { Add_globalhistory(par_internal, incumbentobjval); } //add to history 
-            if (incumbentobjvalcopy < incumbentobjval)
+            if (incumbentobjvalcopy < Bestval)
+            {
+                Bestval = incumbentobjvalcopy;            
+                incumbentobjval = incumbentobjvalcopy;
+                par_internal = par_internalcopy;
+                bestparameters = par_internalcopy;
+            }
+            else if (incumbentobjvalcopy < incumbentobjval)
             {
                 incumbentobjval = incumbentobjvalcopy;
                 par_internal = par_internalcopy;
+
             }
             else
             {
@@ -152,7 +163,7 @@ public class ParameterSA : ICloneable
             Temperature *= alpha;
             string parstring = String.Join(",", Par_asKey(par_internal).Select(p => p.ToString()).ToArray());
             //Output.Add("Parameters: " + parstring.PadRight(13) + "Obj val: ".PadLeft(10) + incumbentobjvalcopy.ToString());
-            Console.WriteLine("Parameters: " + parstring.PadRight(13) + "Obj val: ".PadLeft(10) + incumbentobjvalcopy.ToString());
+            Console.WriteLine("Parameters: " + parstring.PadRight(16) + "Obj val: ".PadLeft(14) + incumbentobjvalcopy.ToString());
         }
 
         return;
@@ -514,7 +525,7 @@ public class Parameter : ICloneable
 
     public object Clone()
     {
-       return this.MemberwiseClone();
+        return this.MemberwiseClone();
     }
 }
 

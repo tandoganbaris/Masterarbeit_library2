@@ -19,7 +19,8 @@ class Program
     public static void Main(string[] args)
     {
 
-        string filepath = @"C:\classes\masterarbeit\instances\daniel\Path\path4.txt";
+        string filepath = @"C:\classes\masterarbeit\instances\daniel\Nice\nice4.txt";
+        //"C:\classes\masterarbeit\instances\daniel\Nice\nice1.txt"
         ////"C:\classes\masterarbeit\instances\c\c\C7\C7_3.txt"
         ////"C:\classes\masterarbeit\instances\daniel\babu\babu.txt"
         ////"C:\classes\masterarbeit\instances\daniel\Burke\n12 -formatted.txt"
@@ -50,8 +51,14 @@ class Program
         ParameterSA sa5 = new ParameterSA(solvers[4].Extract_Parameters(), solvers[4]);
         List<ParameterSA> anneilings = new List<ParameterSA> { sa1, sa2, sa3, sa4, sa5 };
 
+   
+        Runonce(fhandler, out List<string> list);
 
-        //anneilings[2].SA();
+        //anneilings[0].SA();
+
+        //string parstring = String.Join(",", sa1.Par_asKey(sa1.bestparameters).Select(p => p.ToString()).ToArray());
+
+        //Console.WriteLine("Parameters: " + parstring.PadRight(16) + "Obj val: ".PadLeft(14) + sa1.Bestval.ToString());
 
         Parallel.For(0, 5, i =>
         {
@@ -61,49 +68,11 @@ class Program
 
 
 
-        //Runonce(fhandler, out List<string> list);
 
 
 
 
 
-
-
-
-
-        //object lockobject = null;
-
-        //lock (lockobject)
-        //{
-        //    //Zugriff auf file
-
-        //}
-
-        ////berechnungen
-
-        //lock (lockobject)
-        //{
-        //    // Zugriff auf output datei
-        //}
-
-        //string s = "";
-
-        //Parallel.For(0, 6, i =>
-        //{
-        //    lock (lockobject)
-        //        s = i.ToString();
-
-        //});
-
-
-        //anneiling.SA();
-        //ConcurrentBag<List<string>> output = new ConcurrentBag<List<string>>();
-        //Parallel.For(0, 6,i =>{
-        //    Runonce(filepath, outputpath, out List<string> outputlist);
-        //    output.Add(outputlist);
-
-        //        });
-        //Runonce(filepath, outputpath, out List<string> outlist);
 
 
 
@@ -124,7 +93,8 @@ class Program
         algos.Input_Analysis();
         Stopwatch timer = new Stopwatch();
         timer.Start();
-        algos.Main_OffURPrep();
+        algos.Large_OffURPrep();
+        //algos.Main_OffUR2();
         timer.Stop();
         Console.WriteLine("Took this much time: " + timer.ElapsedMilliseconds);
         fhandler.Loadorder.Clear();
