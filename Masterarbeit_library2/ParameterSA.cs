@@ -14,7 +14,7 @@ public class ParameterSA : ICloneable
     public ParameterSA() { }
     internal Parameter[] initialparameters { get; set; } = new Parameter[] { };
     public int Bestval { get; set; } = int.MaxValue;
-    public Parameter[] bestparameters { get; set; } = new Parameter[] { };
+    public string bestparameters { get; set; } = string.Empty;
     public double InitialTemp { get; set; }
     public double PenatlyRange { get; set; } = 0.03;//0.06
     public List<string> Output { get; set; } = new List<string> { };
@@ -102,7 +102,7 @@ public class ParameterSA : ICloneable
     {
         Bestval = int.MaxValue;
         int iteration = 0;
-        int limit = 1000;
+        int limit = 100;
         double Temperature = 5;
         InitialTemp = Temperature;
         double alpha = 0.95;
@@ -116,12 +116,13 @@ public class ParameterSA : ICloneable
             LS(ref par_internalcopy, ref incumbentobjvalcopy, Temperature); //do local search
             int[] Key_value = Par_asKey(par_internal);
             if (!Neighborhood_sofar.ContainsKey(Key_value)) { Add_globalhistory(par_internal, incumbentobjval); } //add to history 
-            if (incumbentobjvalcopy < Bestval)
+            if (incumbentobjvalcopy <= Bestval)
             {
                 Bestval = incumbentobjvalcopy;            
                 incumbentobjval = incumbentobjvalcopy;
                 par_internal = par_internalcopy;
-                bestparameters = par_internalcopy;
+                string parstring1 = String.Join(",", Par_asKey(par_internalcopy).Select(p => p.ToString()).ToArray());
+                bestparameters = parstring1;
             }
             else if (incumbentobjvalcopy < incumbentobjval)
             {
@@ -334,22 +335,27 @@ public class ParameterSA : ICloneable
             //}
             //else
             //{
+            //  Neighborhood_LS.Add(newobj, new List<int[]> { parkey });
 
-            int index2 = rnd.Next(0, Neighborhood_LS.First().Value.Count);
-            List<int[]> chosenlist = Neighborhood_LS.First().Value;
-            int[] parkey2 = chosenlist[index2];
-            Bestarray = Key_asPar(parkey2, Neighborhood_LS.First().Key);
-            currentval = Neighborhood_LS.First().Key;
+            if (Neighborhood_LS.First().Key != 0)
+            {
+                int index2 = rnd.Next(0, Neighborhood_LS.First().Value.Count);
+                List<int[]> chosenlist = Neighborhood_LS.First().Value;
+                int[] parkey2 = chosenlist[index2];
+                Bestarray = Key_asPar(parkey2, Neighborhood_LS.First().Key);
+                currentval = Neighborhood_LS.First().Key;
+            }
+
 
             //}
             //foreach (Parameter p in Bestarray)
             //{
             //    p.LSround_completed = false;
             //}
-            if (Bestarray.Last().CurrentParval == 0 || Bestarray.Last().CurrentParval < 80)
-            {
-                string here = string.Empty;
-            }
+            //if (Bestarray.Last().CurrentParval == 0 || Bestarray.Last().CurrentParval < 80)
+            //{
+            //    string here = string.Empty;
+            //}
             parameters = Bestarray.ToArray();
         }
         catch (Exception e)

@@ -33,22 +33,23 @@ public class Extreme_Algorithms : ICloneable
     internal List<Vertex2D> verticestoconsider { get; set; } = new List<Vertex2D>();
     internal List<ExtremePoint> ActiveExtremePoints { get; set; } = new List<ExtremePoint>();
     internal List<ExtremePoint> Notallowed { get; set; } = new List<ExtremePoint>(); //used and destroyed extreme points
-    public int Chosen_maxdim { get; set; } = 1000;
+    public int Chosen_maxdim { get; set; } = 150;
     public int Chosen_mindim { get; set; } = 1;
     public int Curve { get; set; } = 1; //0 soft 1 hard for penalty decision (depends on Opt)
-    public double A1 { get; set; } = 5; //bottom
-    public double A2 { get; set; } = 3;//righside
-    public double A3 { get; set; } = 5;//topside
-    public double A4 { get; set; } = 3; //leftside
-    public bool R { get; set; } = false; //rewarding perfect overlap
+    //
+    public double A1 { get; set; } =1; //bottom
+    public double A2 { get; set; } =3;//righside
+    public double A3 { get; set; } =0;//topside
+    public double A4 { get; set; } =2; //leftside
+    public bool R { get; set; } = true; //rewarding perfect overlap
     public int Gamma { get; set; } = 30; //penalty for strip height incrrease
-    public int Beta { get; set; } = 10; //preference factor of lower positions
+    public int Beta { get; set; } = 0; //preference factor of lower positions
     public bool VolumeUse { get; set; } = false; //using volume as a factor to decide
     public int StripHeight { get; set; } = 0;
     public double Largestvol { get; set; }
     public int Multiplier { get; set; } = 2; //in the case the mindim is 1 to prevent overlap
-    public int Opt { get; set; } = 1000; //to move the sigmoid curve for penalty 
-    public double RatioBan { get; set; } = 7;
+    public int Opt { get; set; } = 206; //to move the sigmoid curve for penalty 
+    public double RatioBan { get; set; } = 100;
     public string RatioBanOrientation { get; set; } = "Horizontal";//"Vertical"; "Horizontal";
     public double Shadowsearchmultiplier { get; set; } = 2; //multiplies the maxdim
     public List<string> Errorlog { get; set; } = new List<string>();
@@ -57,7 +58,7 @@ public class Extreme_Algorithms : ICloneable
     public List<Package2D> Inbetween_loadorder { get; set; } = new List<Package2D>();
     internal List<Vertex2D> Virtual_Vertices { get; set; } = new List<Vertex2D>();
     internal Dictionary<Point2D, MasterRule> Rules { get; set; } = new Dictionary<Point2D, MasterRule>();
-    public Package2D Bin { get; set; } = new Package2D(1000, 1500); //needs to be adjusted
+    public Package2D Bin { get; set; } = new Package2D(200, 300); //needs to be adjusted
     public Random rnd = new Random();
     public Extreme_Algorithms() { }
 
@@ -1982,7 +1983,7 @@ public class Extreme_Algorithms : ICloneable
 
 
         //input = input.OrderByDescending(x => x.Width).ThenBy(x => x.Length).ToList(); //The Prep
-        input = input.OrderByDescending(x => x.Largestdim).ToList();
+        input = input.OrderByDescending(x => x.Volume).ToList();
         //loadorder.Add(input[0]);
         loadorder[0].OverwritePosition(0, 0, 1); //set the bin
 
@@ -2006,6 +2007,10 @@ public class Extreme_Algorithms : ICloneable
             //ActiveExtremePoints = ActiveExtremePoints.OrderBy(x => x.Y).ThenBy(x => x.X).ToList();
             foreach (ExtremePoint E in ActiveExtremePoints.ToList())// can add another loop for packs to do best fit
             {
+                //if (input.First().Indexes["Instance"] == 11 && E.X == 14 && E.Y == 18)
+                //{
+                //    string here = string.Empty;
+                //}
                 bool needsspace = true;
                 if (ActiveExtremePoints.ToList().Count > 1) { needsspace = Simple_Overlapcheck_manual(E, Rules.Last().Value.Rulepoints); }
                 else { needsspace = false; }
@@ -2016,7 +2021,7 @@ public class Extreme_Algorithms : ICloneable
                 Package2D current_pack_rotated = new Package2D(current_pack.Length, current_pack.Width);
                 current_pack_rotated.Indexes.Add("Instance", current_pack.Indexes["Instance"]);
                 current_pack_rotated.OverwritePosition(E.X, E.Y, 1);
-                //if (current_pack.Indexes["Instance"] == 14 && E.X == 16 && E.Y == 13)
+                //if (current_pack.Indexes["Instance"] == 11 && E.X == 14 && E.Y == 18)
                 //{
                 //    string here = string.Empty;
                 //}
@@ -2090,12 +2095,12 @@ public class Extreme_Algorithms : ICloneable
                 }
 
             }
-            //if(FitnessList.Count == 0)
-            //{
-            //    Load_order.Clear();
-            //    Load_order.AddRange(loadorder);
-            //    return;
-            //}
+            if (FitnessList.Count == 0)
+            {
+                Load_order.Clear();
+                Load_order.AddRange(loadorder);
+                return;
+            }
             Package2D chosenpack = FitnessList.Last().Value[0].Item1;
             ExtremePoint chosenE = FitnessList.Last().Value[0].Item2;
             chosenpack.OverwritePosition(chosenE.X, chosenE.Y, 1);
@@ -2103,7 +2108,7 @@ public class Extreme_Algorithms : ICloneable
             Inbetween_loadorder = loadorder.ToList();
             MasterRule r2 = new MasterRule(chosenpack);
             Rules.Add(r2.Center, r2);
-            //if (chosenpack.Indexes["Instance"] == 171)//p. && 
+            //if (chosenpack.Indexes["Instance"] == 12)//p. && 
             //{
             //    string here = string.Empty;
             //}
@@ -2779,7 +2784,10 @@ public class Extreme_Algorithms : ICloneable
     //first refresh this then vertices as it can cause confusion with vertices
     {
         if ((chosen.Y + p.Length) > StripHeight) { StripHeight = chosen.Y + p.Length; }
-        ActiveExtremePoints.Remove(chosen);
+        List<ExtremePoint> toremove = new List<ExtremePoint> { chosen };
+        //ActiveExtremePoints = ActiveExtremePoints.Except(toremove).ToList();
+        //ActiveExtremePoints.Remove(chosen);
+        ActiveExtremePoints.RemoveAll(x => x.X == chosen.X && x.Y == chosen.Y);
         Notallowed.Add(chosen);
 
         var E_toappend = from point in p.Pointslist //fetch the 2nd and 4th points
@@ -3037,7 +3045,7 @@ public class Extreme_Algorithms : ICloneable
     //first refresh this then vertices as it can cause confusion with vertices
     {
         if ((chosen.Y + p.Length) > StripHeight) { StripHeight = chosen.Y + p.Length; }
-        ActiveExtremePoints.Remove(chosen);
+        ActiveExtremePoints.RemoveAll(x => x.X == chosen.X && x.Y == chosen.Y);
         Notallowed.Add(chosen);
 
         var E_toappend = from point in p.Pointslist //fetch the 2nd and 4th points
@@ -4231,8 +4239,8 @@ public class Extreme_Algorithms : ICloneable
     public int RunNewPars(Parameter[] parameters)
     {
         Load_Parameters(parameters);
-        //Main_OffURPrep2();
-        Large_OffURPrep();
+        Main_OffURPrep2();
+        //Large_OffURPrep();
         //Main_OffUR2();
         return StripHeight;
     }

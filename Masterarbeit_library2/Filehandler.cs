@@ -19,13 +19,14 @@ public class Filehandler : ICloneable
     public Package2D Depot { get; set; }
     public List<Package2D> Packagelist { get; set; } = new List<Package2D>();
     public List<Package2D> Loadorder { get; set; } = new List<Package2D>();
+    public int Stripheight { get; set; } = 0;
     public Filehandler(string input)
     {
         Input = input;
         bool canberead = Readtest();
         if ((Input.Length > 0) && (canberead))
         {
-            ReadLoad2();
+            ReadLoad1();
 
         }
     }
@@ -50,6 +51,7 @@ public class Filehandler : ICloneable
         string input = Regex.Replace(Input, @"\s\s+", " ").Trim();
         string[] parts = input.Split("\\");
         string namepart = GetUntilOrEmpty(parts[parts.Length - 1], ".");
+        namepart+=($"_{Stripheight.ToString()}");
         string filename = $"{namepart}.csv";
         //string filename = $"testload{4}.{namepart}.csv";
         string path = Path.Combine(Output, filename);
