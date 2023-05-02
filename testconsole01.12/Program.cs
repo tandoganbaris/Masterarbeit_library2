@@ -19,25 +19,26 @@ class Program
     public static void Main(string[] args)
     {
 
-        string filepath = @"C:\classes\masterarbeit\instances\N_T\N_T\T6e.ins2D";
-
+        string filepath = @"C:\classes\masterarbeit\instances\N_T\N_T\N6e.ins2D";
+        
         //"C:\classes\masterarbeit\instances\c\c\C1\C1_1.txt"
         //"C:\classes\masterarbeit\instances\daniel\Nice\nice1.txt"
-        ////"C:\classes\masterarbeit\instances\c\c\C7\C7_3.txt"
-        ////"C:\classes\masterarbeit\instances\daniel\babu\babu.txt"
-        ////"C:\classes\masterarbeit\instances\daniel\Burke\n12 -formatted.txt"
-        ////@"C:\classes\masterarbeit\instances\daniel\Burke\n11.txt";
-        ////"C:\classes\masterarbeit\instances\N_T\N_T\T7e.ins2D"
-        ////"C:\classes\masterarbeit\instances\daniel\Burke\n13.txt"
-        ////@"C:\classes\masterarbeit\instances\N_T\N_T\N1c.ins2D"
+        //"C:\classes\masterarbeit\instances\c\c\C7\C7_3.txt"
+        //"C:\classes\masterarbeit\instances\daniel\babu\babu.txt"
+        //"C:\classes\masterarbeit\instances\daniel\Burke\n12 -formatted.txt"
+        //@"C:\classes\masterarbeit\instances\daniel\Burke\n11.txt";
+        //"C:\classes\masterarbeit\instances\N_T\N_T\T7e.ins2D"
+        //"C:\classes\masterarbeit\instances\daniel\Burke\n13.txt"
+        //@"C:\classes\masterarbeit\instances\N_T\N_T\N1c.ins2D"
+        //"C:\classes\masterarbeit\instances\daniel\Path\path6.txt"
         string outputpath = @"C:\Users\tando\Desktop\tests\";
         Filehandler fhandler = new Filehandler(filepath);
         fhandler.Output = outputpath;
         Extreme_Algorithms algomain = new Extreme_Algorithms();
-        algomain.StripHeight = 250;
+        algomain.StripHeight = 1040;
 
         algomain.Input_packages = fhandler.Packagelist.ToList();
-        //algomain.Input_Analysis();
+        algomain.Input_Analysis();
 
         List<Extreme_Algorithms> solvers = new List<Extreme_Algorithms>() { };
         for (int i = 0; i < 5; i++)
@@ -66,31 +67,45 @@ class Program
 
 
 
-        //Parallel.For(0, 5, i =>
-        //{
-        //    anneilings[i].SA();
+        Parallel.For(0, 5, i =>
+        {
+            anneilings[i].SA();
 
-        //});
-
-
-        //foreach (ParameterSA p in anneilings)
-        //{
+        });
 
 
-        //    Console.WriteLine("Parameters: " + p.bestparameters + "Obj val: ".PadLeft(14) + p.Bestval.ToString());
+        foreach (ParameterSA p in anneilings)
+        {
 
 
-        //}
-        //Console.WriteLine("Entire Neighborhood \n");
-        //foreach (ParameterSA p in anneilings)
-        //{
-        //    foreach (var item in p.Neighborhood_sofar)
-        //    {
-        //        string parstring = String.Join(",", (item.Key).Select(p => p.ToString()).ToArray());
-        //        Console.WriteLine(parstring + " : " + item.Value.ToString());
-        //    }
+            Console.WriteLine("Parameters: " + p.bestparameters + "Obj val: ".PadLeft(14) + p.Bestval.ToString());
 
-        //}
+
+        }
+        Console.WriteLine("Entire Neighborhood \n");
+        foreach (ParameterSA p in anneilings)
+        {
+            foreach (var item in p.Neighborhood_sofar)
+            {
+                string parstring = String.Join(",", (item.Key).Select(p => p.ToString()).ToArray());
+                Console.WriteLine(parstring + " : " + item.Value.ToString());
+            }
+            //foreach (var item in p.Neighborhood_withLoad)
+            //{
+            //    List<Package2D> outputorder = item.Value.Item2;
+            //    fhandler.Loadorder.Clear();
+            //    fhandler.Loadorder.AddRange(outputorder);
+            //    fhandler.Stripheight = item.Value.Item1;
+            //    try { fhandler.Createfiles(); }
+            //    catch (Exception e)
+            //    {
+            //        Console.WriteLine(e.Message);
+            //    }
+
+
+            //}
+
+        }
 
 
 

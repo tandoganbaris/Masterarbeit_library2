@@ -12,14 +12,18 @@ namespace Masterarbeit_library2;
 public class ParameterSA : ICloneable
 {
     public ParameterSA() { }
+
+    public List<Package2D> Load_order { get; set; } = new List<Package2D>();
     internal Parameter[] initialparameters { get; set; } = new Parameter[] { };
     public int Bestval { get; set; } = int.MaxValue;
     public string bestparameters { get; set; } = string.Empty;
     public double InitialTemp { get; set; }
-    public double PenatlyRange { get; set; } = 0.03;//0.06
+    public double PenatlyRange { get; set; } = 0.06;//0.06
     public List<string> Output { get; set; } = new List<string> { };
 
     public Dictionary<int[], int> Neighborhood_sofar = new Dictionary<int[], int>();
+
+    public Dictionary<int[], Tuple<int, List<Package2D>>> Neighborhood_withLoad = new Dictionary<int[], Tuple<int, List<Package2D>>>();
     internal Extreme_Algorithms Solver { get; set; } = new Extreme_Algorithms();
     Random rnd = new Random();
     public ParameterSA(int[] parameters, Extreme_Algorithms algos)
@@ -43,7 +47,7 @@ public class ParameterSA : ICloneable
         for (int i = 0; i < parameters.Length; i++)
         {
 
-            parkey[i] = parameters[i].CurrentParval;
+            parkey[i] = (int)parameters[i].CurrentParval;
         }
 
 
@@ -96,13 +100,21 @@ public class ParameterSA : ICloneable
 
         Neighborhood_sofar.Add(parkey, objval);
     }
+    public void Add_globalhistory_withLoad(Parameter[] parameters, int objval, List<Package2D> load)
+    {
+
+
+        int[] parkey = Par_asKey(parameters.ToArray());
+        Tuple<int, List<Package2D>> outputtuple = new Tuple<int, List<Package2D>>(objval, load);
+        Neighborhood_withLoad.Add(parkey, outputtuple);
+    }
 
 
     public void SA()
     {
         Bestval = int.MaxValue;
         int iteration = 0;
-        int limit = 100;
+        int limit = 50;
         double Temperature = 5;
         InitialTemp = Temperature;
         double alpha = 0.95;
@@ -118,7 +130,7 @@ public class ParameterSA : ICloneable
             if (!Neighborhood_sofar.ContainsKey(Key_value)) { Add_globalhistory(par_internal, incumbentobjval); } //add to history 
             if (incumbentobjvalcopy <= Bestval)
             {
-                Bestval = incumbentobjvalcopy;            
+                Bestval = incumbentobjvalcopy;
                 incumbentobjval = incumbentobjvalcopy;
                 par_internal = par_internalcopy;
                 string parstring1 = String.Join(",", Par_asKey(par_internalcopy).Select(p => p.ToString()).ToArray());
@@ -221,10 +233,11 @@ public class ParameterSA : ICloneable
                         {
                             internal_Bestval = newobj;
                             Bestarray = par_copy.ToArray();
-                            if (newobj < Bestval)
+                            if (newobj <= Bestval)
                             {
                                 Bestval = newobj;
                                 Add_globalhistory(par_copy.ToArray(), Bestval);
+                                Add_globalhistory_withLoad(par_copy.ToArray(), Bestval, Solver.Load_order.ToList());
                                 iteration = maxiteration;
                                 foreach (Parameter p in par_copy) { p.LSround_completed = true; }
                                 break;
@@ -344,6 +357,21 @@ public class ParameterSA : ICloneable
                 int[] parkey2 = chosenlist[index2];
                 Bestarray = Key_asPar(parkey2, Neighborhood_LS.First().Key);
                 currentval = Neighborhood_LS.First().Key;
+            }
+            else if ((Neighborhood_LS.First().Key == 0) && (Neighborhood_LS.Keys.Count > 1))
+            {
+                Neighborhood_LS.Remove(Neighborhood_LS.First().Key);
+                int index2 = rnd.Next(0, Neighborhood_LS.First().Value.Count);
+                List<int[]> chosenlist = Neighborhood_LS.First().Value;
+                int[] parkey2 = chosenlist[index2];
+                Bestarray = Key_asPar(parkey2, Neighborhood_LS.First().Key);
+                currentval = Neighborhood_LS.First().Key;
+            }
+            else
+            {
+                
+                currentval = int.MaxValue;
+
             }
 
 

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,22 +34,22 @@ public class Extreme_Algorithms : ICloneable
     internal List<Vertex2D> verticestoconsider { get; set; } = new List<Vertex2D>();
     internal List<ExtremePoint> ActiveExtremePoints { get; set; } = new List<ExtremePoint>();
     internal List<ExtremePoint> Notallowed { get; set; } = new List<ExtremePoint>(); //used and destroyed extreme points
-    public int Chosen_maxdim { get; set; } = 150;
+    public int Chosen_maxdim { get; set; } = 1000;
     public int Chosen_mindim { get; set; } = 1;
     public int Curve { get; set; } = 1; //0 soft 1 hard for penalty decision (depends on Opt)
     //
-    public double A1 { get; set; } =1; //bottom
-    public double A2 { get; set; } =3;//righside
-    public double A3 { get; set; } =0;//topside
-    public double A4 { get; set; } =2; //leftside
-    public bool R { get; set; } = true; //rewarding perfect overlap
+    public double A1 { get; set; } =9; //bottom
+    public double A2 { get; set; } =6;//righside
+    public double A3 { get; set; } =5;//topside
+    public double A4 { get; set; }= 7; //leftside
+    public bool R { get; set; } = true;//rewarding perfect overlap
     public int Gamma { get; set; } = 30; //penalty for strip height incrrease
-    public int Beta { get; set; } = 0; //preference factor of lower positions
+    public int Beta { get; set; } =1; //preference factor of lower positions
     public bool VolumeUse { get; set; } = false; //using volume as a factor to decide
     public int StripHeight { get; set; } = 0;
     public double Largestvol { get; set; }
     public int Multiplier { get; set; } = 2; //in the case the mindim is 1 to prevent overlap
-    public int Opt { get; set; } = 206; //to move the sigmoid curve for penalty 
+    public int Opt { get; set; } = 200; //to move the sigmoid curve for penalty 
     public double RatioBan { get; set; } = 100;
     public string RatioBanOrientation { get; set; } = "Horizontal";//"Vertical"; "Horizontal";
     public double Shadowsearchmultiplier { get; set; } = 2; //multiplies the maxdim
@@ -2116,7 +2117,7 @@ public class Extreme_Algorithms : ICloneable
             Refresh_Vertices(chosenpack, chosenE);
             FitnessList.Clear();
             input.Remove(input.First());
-            UpdateDims(input);
+            if (loadorder.Count % 10 == 0) { UpdateDims(input); }
 
         }
         Load_order.Clear();
@@ -2156,8 +2157,9 @@ public class Extreme_Algorithms : ICloneable
                 }
 
         }
+        int counter_dim = 0;
         //input = input.OrderByDescending(x => x.Width).ThenBy(x => x.Length).ToList(); //The Prep
-        input = input.OrderByDescending(x => x.Volume).ToList();
+        input = input.OrderByDescending(x => x.Largestdim).ToList();
         loadorder.Add(input[0]);
         loadorder[0].OverwritePosition(0, 0, 1); //set the bin
 
@@ -2269,6 +2271,7 @@ public class Extreme_Algorithms : ICloneable
             //    Load_order.AddRange(loadorder);
             //    return;
             //}
+            counter_dim++;
             Package2D chosenpack = FitnessList.Last().Value[0].Item1;
             ExtremePoint chosenE = FitnessList.Last().Value[0].Item2;
             chosenpack.OverwritePosition(chosenE.X, chosenE.Y, 1);
@@ -2285,7 +2288,7 @@ public class Extreme_Algorithms : ICloneable
             Refresh_Vertices(chosenpack, chosenE);
             FitnessList.Clear();
             input.Remove(input.First());
-            UpdateDims(input);
+            if (counter_dim % 50 == 0) { UpdateDims(input); }
 
         }
         Load_order.Clear();
