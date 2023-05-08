@@ -19,8 +19,8 @@ class Program
     public static void Main(string[] args)
     {
 
-        string filepath = @"C:\classes\masterarbeit\instances\N_T\N_T\N6e.ins2D";
-        
+        string filepath = @"C:\classes\masterarbeit\instances\daniel\Path\path6.txt";
+        //"C:\classes\masterarbeit\instances\daniel\cgcut\cgcut1.txt"
         //"C:\classes\masterarbeit\instances\c\c\C1\C1_1.txt"
         //"C:\classes\masterarbeit\instances\daniel\Nice\nice1.txt"
         //"C:\classes\masterarbeit\instances\c\c\C7\C7_3.txt"
@@ -35,7 +35,7 @@ class Program
         Filehandler fhandler = new Filehandler(filepath);
         fhandler.Output = outputpath;
         Extreme_Algorithms algomain = new Extreme_Algorithms();
-        algomain.StripHeight = 1040;
+        algomain.StripHeight = 1100;
 
         algomain.Input_packages = fhandler.Packagelist.ToList();
         algomain.Input_Analysis();
@@ -55,7 +55,7 @@ class Program
         List<ParameterSA> anneilings = new List<ParameterSA> { sa1, sa2, sa3, sa4, sa5 };
 
 
-        Runonce(fhandler, out List<string> list);
+        //Runonce(fhandler, out List<string> list);
 
         //anneilings[0].SA();
 
@@ -67,11 +67,16 @@ class Program
 
 
 
+        int timelimit = 1; //in minutes
+        timelimit *= 60000;
+      
         Parallel.For(0, 5, i =>
         {
-            anneilings[i].SA();
+            anneilings[i].SA(timelimit);
 
         });
+
+      
 
 
         foreach (ParameterSA p in anneilings)
@@ -132,6 +137,7 @@ class Program
         timer.Start();
         algos.Main_OffURPrep2();
         //algos.Large_OffURPrep();
+        //algos.Large_OffURPrep2();
         //algos.Main_OffUR2();
         timer.Stop();
         Console.WriteLine("Took this much time: " + timer.ElapsedMilliseconds);

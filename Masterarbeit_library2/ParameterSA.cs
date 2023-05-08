@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
@@ -18,7 +19,8 @@ public class ParameterSA : ICloneable
     public int Bestval { get; set; } = int.MaxValue;
     public string bestparameters { get; set; } = string.Empty;
     public double InitialTemp { get; set; }
-    public double PenatlyRange { get; set; } = 0.06;//0.06
+    public Stopwatch timerSA { get; set; } = new Stopwatch();
+    public double PenatlyRange { get; set; } = 0.03;//0.06
     public List<string> Output { get; set; } = new List<string> { };
 
     public Dictionary<int[], int> Neighborhood_sofar = new Dictionary<int[], int>();
@@ -32,7 +34,7 @@ public class ParameterSA : ICloneable
         Parameter a2 = new Parameter(parameters[1], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
         Parameter a3 = new Parameter(parameters[2], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5 }, 3, 0.1, 1);
         Parameter a4 = new Parameter(parameters[3], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
-        Parameter rewarding = new Parameter(parameters[4], algos.StripHeight, new int[] { 0, 1 }, 1, 0.1, 1);
+        Parameter rewarding = new Parameter(parameters[4], algos.StripHeight, new int[] { 0, 1 }, 1, 0.1, 1); // 0,1
         Parameter opt = new Parameter(parameters[5], algos.StripHeight, new int[] { (int)(parameters[5] * (1 - 2 * PenatlyRange)), (int)(parameters[5] * (1 - PenatlyRange)), parameters[5], (int)(parameters[5] * (1 + PenatlyRange)), (int)(parameters[5] * (1 + 2 * PenatlyRange)) }, 3, 0.1, 1);
         initialparameters = new Parameter[] { a1, a2, a3, a4, rewarding, opt };
         Bestval = algos.StripHeight;
@@ -83,7 +85,7 @@ public class ParameterSA : ICloneable
         Parameter a2 = new Parameter(rnd.Next(0, 10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
         Parameter a3 = new Parameter(rnd.Next(0, 6), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5 }, 3, 0.1, 1);
         Parameter a4 = new Parameter(rnd.Next(0, 10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
-        Parameter rewarding = new Parameter(rnd.Next(0, 2), int.MaxValue, new int[] { 0, 1 }, 1, 0.1, 1);
+        Parameter rewarding = new Parameter(rnd.Next(0, 2), int.MaxValue, new int[] { 0, 1 }, 1, 0.1, 1); //0,1
         //int inputopt = initialparameters.Last().CurrentParval;
         //int[] optval = new int[] { inputopt - 20, inputopt - 10, inputopt, inputopt + 10, inputopt + 20 };
         Parameter opt = new Parameter(initialparameters[5].Range[rnd.Next(initialparameters[5].Range.Length)], int.MaxValue, initialparameters[5].Range, 3, 0.1, 1);
@@ -110,8 +112,10 @@ public class ParameterSA : ICloneable
     }
 
 
-    public void SA()
+    public void SA(int TimeLimit)
     {
+        if (TimeLimit == 0) { TimeLimit = int.MaxValue; }
+        timerSA.Start();
         Bestval = int.MaxValue;
         int iteration = 0;
         int limit = 50;
@@ -121,18 +125,18 @@ public class ParameterSA : ICloneable
         Parameter[] par_internal = initialparameters.ToArray();
         //int startobjval = Bestval;
         int incumbentobjval = Bestval;
-        while (iteration < limit)
+        while (iteration < limit && timerSA.ElapsedMilliseconds < TimeLimit)
         {
             int incumbentobjvalcopy = (int)incumbentobjval;
             Parameter[] par_internalcopy = (Parameter[])par_internal.Clone(); // par_internal.ToArray();
-            LS(ref par_internalcopy, ref incumbentobjvalcopy, Temperature); //do local search
+            LS(ref par_internalcopy, ref incumbentobjvalcopy, Temperature, TimeLimit); //do local search
             int[] Key_value = Par_asKey(par_internal);
             if (!Neighborhood_sofar.ContainsKey(Key_value)) { Add_globalhistory(par_internal, incumbentobjval); } //add to history 
             if (incumbentobjvalcopy <= Bestval)
             {
                 Bestval = incumbentobjvalcopy;
                 incumbentobjval = incumbentobjvalcopy;
-                par_internal = par_internalcopy;
+                par_internal = par_internalcopy;  //override the parameters in the SA depending on the solution quality
                 string parstring1 = String.Join(",", Par_asKey(par_internalcopy).Select(p => p.ToString()).ToArray());
                 bestparameters = parstring1;
             }
@@ -175,13 +179,13 @@ public class ParameterSA : ICloneable
             iteration++;
             Temperature *= alpha;
             string parstring = String.Join(",", Par_asKey(par_internal).Select(p => p.ToString()).ToArray());
-            //Output.Add("Parameters: " + parstring.PadRight(13) + "Obj val: ".PadLeft(10) + incumbentobjvalcopy.ToString());
-            Console.WriteLine("Parameters: " + parstring.PadRight(16) + "Obj val: ".PadLeft(14) + incumbentobjvalcopy.ToString());
+          
+            Console.WriteLine("Parameters: " + parstring.PadRight(16) + "Obj val: ".PadLeft(14) + incumbentobjval.ToString());
         }
-
+        timerSA.Stop();
         return;
     }
-    public void LS(ref Parameter[] parameters, ref int currentval, double Temperature)
+    public void LS(ref Parameter[] parameters, ref int currentval, double Temperature, int TimeLimit)
     {
         try
         {
@@ -194,7 +198,7 @@ public class ParameterSA : ICloneable
             int samevalval = 0;
             Parameter[] Bestarray = par_copy.ToArray();
             bool unbrokenloop = true;
-            while (unbrokenloop)
+            while (unbrokenloop && timerSA.ElapsedMilliseconds < TimeLimit)
             {
                 double choice = rnd.NextDouble();
                 int index = Choose(par_copy.ToArray(), choice);
@@ -204,7 +208,7 @@ public class ParameterSA : ICloneable
                 int direction = rnd.Next(0, 2); //eiher 0 minus or 1 plus
                 int directionchange = 0; //have we changed direction so far for the parameter in this round of local search
                 int stepsize = 1; //how many steps of move within the range
-                while (iteration < maxiteration)
+                while (iteration < maxiteration && timerSA.ElapsedMilliseconds < TimeLimit)
                 {
 
                     int oldobj = currentval;//par_copy[index].CurrentObjval;
@@ -212,18 +216,32 @@ public class ParameterSA : ICloneable
                     int[] par_copy_copy = Par_asKey(par_copy.ToArray());
 
                     par_copy[index].UpdateVal(direction, stepsize);
-
-                    int newobj = Solver.RunNewPars(par_copy.ToArray()); //toarray?
-                    par_copy[index].CurrentObjval = newobj;
                     int[] parkey = Par_asKey(par_copy.ToArray());
+                    int newobj = int.MaxValue;
+                    if (!Neighborhood_sofar.ContainsKey(parkey))
+                    {
+                        newobj = Solver.RunNewPars(par_copy.ToArray()); //toarray?
+                        Neighborhood_sofar.Add(parkey, newobj);
+                    }
+                    else
+                    {
+                        iteration++;
+                        continue;
+                    }
+
+                    par_copy[index].CurrentObjval = newobj;
 
 
 
+                    
                     if (!(Neighborhood_LS.ContainsKey(newobj)))
                     {
                         Neighborhood_LS.Add(newobj, new List<int[]> { parkey });
                     }
-                    else { Neighborhood_LS[newobj].Add(parkey); }
+                    else
+                    {
+                        Neighborhood_LS[newobj].Add(parkey);
+                    }
                     if (newobj < oldobj)//if better
                     {
                         Samevalpars.Clear();
@@ -369,7 +387,7 @@ public class ParameterSA : ICloneable
             }
             else
             {
-                
+
                 currentval = int.MaxValue;
 
             }

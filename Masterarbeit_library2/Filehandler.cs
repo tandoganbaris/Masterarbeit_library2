@@ -26,7 +26,7 @@ public class Filehandler : ICloneable
         bool canberead = Readtest();
         if ((Input.Length > 0) && (canberead))
         {
-            ReadLoad1();
+            ReadLoad2();
 
         }
     }
