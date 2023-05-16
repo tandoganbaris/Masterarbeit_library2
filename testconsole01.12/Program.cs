@@ -19,7 +19,7 @@ class Program
     public static void Main(string[] args)
     {
 
-        string filepath = @"C:\classes\masterarbeit\instances\daniel\Path\path6.txt";
+        string filepath = @"C:\classes\masterarbeit\instances\daniel\Nice\nice3.txt";
         //"C:\classes\masterarbeit\instances\daniel\cgcut\cgcut1.txt"
         //"C:\classes\masterarbeit\instances\c\c\C1\C1_1.txt"
         //"C:\classes\masterarbeit\instances\daniel\Nice\nice1.txt"
@@ -31,6 +31,7 @@ class Program
         //"C:\classes\masterarbeit\instances\daniel\Burke\n13.txt"
         //@"C:\classes\masterarbeit\instances\N_T\N_T\N1c.ins2D"
         //"C:\classes\masterarbeit\instances\daniel\Path\path6.txt"
+        //@"C:\classes\masterarbeit\instances\daniel\Nice\nice6.txt";
         string outputpath = @"C:\Users\tando\Desktop\tests\";
         Filehandler fhandler = new Filehandler(filepath);
         fhandler.Output = outputpath;
@@ -55,7 +56,7 @@ class Program
         List<ParameterSA> anneilings = new List<ParameterSA> { sa1, sa2, sa3, sa4, sa5 };
 
 
-        //Runonce(fhandler, out List<string> list);
+        Runonce(fhandler, out List<string> list);
 
         //anneilings[0].SA();
 
@@ -67,18 +68,18 @@ class Program
 
 
 
-        int timelimit = 1; //in minutes
+        int timelimit = 480; //in minutes
         timelimit *= 60000;
-      
+
         Parallel.For(0, 5, i =>
         {
             anneilings[i].SA(timelimit);
 
         });
 
-      
 
 
+        double averagetime = 0;
         foreach (ParameterSA p in anneilings)
         {
 
@@ -94,7 +95,10 @@ class Program
             {
                 string parstring = String.Join(",", (item.Key).Select(p => p.ToString()).ToArray());
                 Console.WriteLine(parstring + " : " + item.Value.ToString());
+
             }
+            //Console.WriteLine("Elapsed time per individual run: " + p.Timeperit);
+            averagetime += p.Timeperit/anneilings.Count;
             //foreach (var item in p.Neighborhood_withLoad)
             //{
             //    List<Package2D> outputorder = item.Value.Item2;
@@ -111,6 +115,7 @@ class Program
             //}
 
         }
+        Console.WriteLine("On avg: " + averagetime);
 
 
 

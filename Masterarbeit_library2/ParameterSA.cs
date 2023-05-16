@@ -21,6 +21,7 @@ public class ParameterSA : ICloneable
     public double InitialTemp { get; set; }
     public Stopwatch timerSA { get; set; } = new Stopwatch();
     public double PenatlyRange { get; set; } = 0.03;//0.06
+    public double Timeperit { get; set; } = 0;
     public List<string> Output { get; set; } = new List<string> { };
 
     public Dictionary<int[], int> Neighborhood_sofar = new Dictionary<int[], int>();
@@ -118,7 +119,7 @@ public class ParameterSA : ICloneable
         timerSA.Start();
         Bestval = int.MaxValue;
         int iteration = 0;
-        int limit = 50;
+        int limit = 30;
         double Temperature = 5;
         InitialTemp = Temperature;
         double alpha = 0.95;
@@ -182,6 +183,8 @@ public class ParameterSA : ICloneable
           
             Console.WriteLine("Parameters: " + parstring.PadRight(16) + "Obj val: ".PadLeft(14) + incumbentobjval.ToString());
         }
+      
+        Timeperit = (timerSA.ElapsedMilliseconds / (double)Neighborhood_sofar.Keys.Count);
         timerSA.Stop();
         return;
     }
