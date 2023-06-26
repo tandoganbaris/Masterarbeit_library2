@@ -19,7 +19,7 @@ class Program
     public static void Main(string[] args)
     {
 
-        string filepath = @"C:\classes\masterarbeit\instances\daniel\Nice\nice3.txt";
+        string filepath = @"C:\classes\masterarbeit\instances\daniel\Path\path5.txt";
         //"C:\classes\masterarbeit\instances\daniel\cgcut\cgcut1.txt"
         //"C:\classes\masterarbeit\instances\c\c\C1\C1_1.txt"
         //"C:\classes\masterarbeit\instances\daniel\Nice\nice1.txt"
@@ -68,14 +68,15 @@ class Program
 
 
 
-        int timelimit = 480; //in minutes
+        int timelimit = 60; //in minutes
         timelimit *= 60000;
 
-        Parallel.For(0, 5, i =>
-        {
-            anneilings[i].SA(timelimit);
+        //Parallel.For(0, 5, i =>
+        //{
+        //    anneilings[i].SA(timelimit);
 
-        });
+        //});
+        anneilings[1].SA(timelimit);
 
 
 
@@ -96,9 +97,21 @@ class Program
                 string parstring = String.Join(",", (item.Key).Select(p => p.ToString()).ToArray());
                 Console.WriteLine(parstring + " : " + item.Value.ToString());
 
+
+            }
+
+            Console.WriteLine("Scaling:");
+            foreach (List<int> l in p.Scalelog)
+            {
+                foreach (int i in l)
+                {
+                    Console.Write(i + ";");
+                }              
+                Console.WriteLine();
+                
             }
             //Console.WriteLine("Elapsed time per individual run: " + p.Timeperit);
-            averagetime += p.Timeperit/anneilings.Count;
+            averagetime += p.Timeperit / anneilings.Count;
             //foreach (var item in p.Neighborhood_withLoad)
             //{
             //    List<Package2D> outputorder = item.Value.Item2;

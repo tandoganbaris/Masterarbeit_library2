@@ -38,23 +38,27 @@ public class Extreme_Algorithms : ICloneable
     public int Chosen_mindim { get; set; } = 1;
     public int Curve { get; set; } = 1; //0 soft 1 hard for penalty decision (depends on Opt)
     //
-    public double A1 { get; set; } = 4; //bottom
-    public double A2 { get; set; } = 8;//righside
-    public double A3 { get; set; } = 1;//topside
-    public double A4 { get; set; } = 6; //leftside
-    public bool R { get; set; } = false;//rewarding perfect overlap
+    public double A1 { get; set; } = 1; //bottom
+    public double A2 { get; set; } = 4;//righside
+    public double A3 { get; set; } = 2;//topside
+    public double A4 { get; set; } = 4; //leftside
+    public bool R { get; set; } = true;//rewarding perfect overlap
     public int Gamma { get; set; } = 30; //penalty for strip height incrrease
-    public int Beta { get; set; } = 10; //preference factor of lower positions
+    public int Beta { get; set; } = 3; //preference factor of lower positions
     public bool VolumeUse { get; set; } = false; //using volume as a factor to decide
     public int StripHeight { get; set; } = 0;
     public double Largestvol { get; set; }
+    public int Timelimit { get; set; } = int.MaxValue;
+    public Stopwatch timer { get; set; } = new Stopwatch();
     public int Multiplier { get; set; } = 2; //in the case the mindim is 1 to prevent overlap
-    public int Opt { get; set; } = 1030; //to move the sigmoid curve for penalty 
+    public int Opt { get; set; } = 1000; //to move the sigmoid curve for penalty 
     public double RatioBan { get; set; } = 100;
     public string RatioBanOrientation { get; set; } = "Horizontal";//"Vertical"; "Horizontal";
     public double Shadowsearchmultiplier { get; set; } = 2; //multiplies the maxdim
-    public int ScaleCap { get; set; } = 200;
+    public int ScaleCap { get; set; } = 200; //max no Epoints allowed in some algos
     public List<string> Errorlog { get; set; } = new List<string>();
+    public List<int> Scalelog { get; set; } = new List<int>(); //record development of n of Epoint 
+    public int Epoint_total { get; set; } = 0;
     public List<Package2D> Input_packages { get; set; } = new List<Package2D>();
     public List<Package2D> Load_order { get; set; } = new List<Package2D>();
     public List<Package2D> Inbetween_loadorder { get; set; } = new List<Package2D>();
@@ -1626,9 +1630,13 @@ public class Extreme_Algorithms : ICloneable
     }
     public void Main_OffURPrep2()
     {
+        timer.Start();
         List<Package2D> input = Input_packages.ToList();
         List<Package2D> loadorder = new List<Package2D>();
         loadorder.Add(Bin);
+        int Totalpackages = input.Count;
+        int increment = (int)Math.Round((double)Totalpackages / (double)10);
+        int iteration = 0;
 
         switch (RatioBanOrientation)
         {
@@ -1667,7 +1675,9 @@ public class Extreme_Algorithms : ICloneable
 
         SortedList<double, List<Tuple<Package2D, ExtremePoint>>> FitnessList =
                 new SortedList<double, List<Tuple<Package2D, ExtremePoint>>>();
-        while (input.ToList().Count != 0)
+
+        bool unbroken = true;
+        while ((input.ToList().Count != 0) && unbroken)
         {
 
             //ActiveExtremePoints = ActiveExtremePoints.OrderBy(x => x.Y).ThenBy(x => x.X).ToList();
@@ -1676,6 +1686,7 @@ public class Extreme_Algorithms : ICloneable
 
             foreach (ExtremePoint E in ActiveExtremePoints.ToList())// can add another loop for packs to do best fit
             {
+                if(timer.ElapsedMilliseconds>= Timelimit) { unbroken = false; break; }
                 //if (input.First().Indexes["Instance"] == 11 && E.X == 14 && E.Y == 18)
                 //{
                 //    string here = string.Empty;
@@ -1785,11 +1796,16 @@ public class Extreme_Algorithms : ICloneable
             Refresh_Vertices(chosenpack, chosenE);
             FitnessList.Clear();
             input.Remove(input.First());
-            if (loadorder.Count % 10 == 0) { UpdateDims(input); }
-
+            if (loadorder.Count % 10 == 0) { UpdateDims(input); } //update min and max dim           
+            iteration++; 
+            if(iteration % increment ==0) { Scalelog.Add(ActiveExtremePoints.Count); } //observe the development of the number of Extreme Points
+            Epoint_total += ActiveExtremePoints.Count;
         }
+        if (input.Count>0) { StripHeight = int.MaxValue; }
+        Scalelog.Add(ActiveExtremePoints.Count);
         Load_order.Clear();
         Load_order.AddRange(loadorder);
+        timer.Stop();
 
 
         return;
@@ -4112,6 +4128,10 @@ public class Extreme_Algorithms : ICloneable
         Virtual_Vertices.Clear();
         Rules.Clear();
         StripHeight = 0;
+        Scalelog.Clear();
+        Epoint_total = 0; 
+
+
         // rnd = new Random(rnd.Next(int.MaxValue));
 
         return;

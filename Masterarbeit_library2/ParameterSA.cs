@@ -23,6 +23,7 @@ public class ParameterSA : ICloneable
     public double PenatlyRange { get; set; } = 0.03;//0.06
     public double Timeperit { get; set; } = 0;
     public List<string> Output { get; set; } = new List<string> { };
+    public List<List<int>> Scalelog { get; set; } = new List<List<int>>();
 
     public Dictionary<int[], int> Neighborhood_sofar = new Dictionary<int[], int>();
 
@@ -119,7 +120,7 @@ public class ParameterSA : ICloneable
         timerSA.Start();
         Bestval = int.MaxValue;
         int iteration = 0;
-        int limit = 30;
+        int limit = 3;
         double Temperature = 5;
         InitialTemp = Temperature;
         double alpha = 0.95;
@@ -223,7 +224,11 @@ public class ParameterSA : ICloneable
                     int newobj = int.MaxValue;
                     if (!Neighborhood_sofar.ContainsKey(parkey))
                     {
+                        Solver.Timelimit = TimeLimit - (int)timerSA.ElapsedMilliseconds;
                         newobj = Solver.RunNewPars(par_copy.ToArray()); //toarray?
+                        List<int> tmp = Solver.Scalelog.ToList();
+                        tmp.Insert(0, Solver.Epoint_total);
+                        Scalelog.Add(tmp);
                         Neighborhood_sofar.Add(parkey, newobj);
                     }
                     else
