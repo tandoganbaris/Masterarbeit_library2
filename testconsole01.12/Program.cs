@@ -18,8 +18,7 @@ class Program
 {
     public static void Main(string[] args)
     {
-        // testing changes
-        //is this working?
+         //testing vstudio gitcommit
 
         string filepath = @"C:\classes\masterarbeit\instances\daniel\Burke\n10-formatted.txt";
         //"C:\classes\masterarbeit\instances\daniel\cgcut\cgcut1.txt"

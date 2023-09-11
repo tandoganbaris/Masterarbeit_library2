@@ -36,7 +36,7 @@ public class ParameterSA : ICloneable
         Parameter a2 = new Parameter(parameters[1], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
         Parameter a3 = new Parameter(parameters[2], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5 }, 3, 0.1, 1);
         Parameter a4 = new Parameter(parameters[3], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
-        Parameter rewarding = new Parameter(parameters[4], algos.StripHeight, new int[] { 1, 1 }, 1, 0.1, 1); // 0,1
+        Parameter rewarding = new Parameter(parameters[4], algos.StripHeight, new int[] { 0, 1 }, 1, 0.1, 1); // 0,1
         Parameter opt = new Parameter(parameters[5], algos.StripHeight, new int[] { (int)(parameters[5] * (1 - 2 * PenatlyRange)), (int)(parameters[5] * (1 - PenatlyRange)), parameters[5], (int)(parameters[5] * (1 + PenatlyRange)), (int)(parameters[5] * (1 + 2 * PenatlyRange)) }, 3, 0.1, 1);
         initialparameters = new Parameter[] { a1, a2, a3, a4, rewarding, opt };
         Bestval = algos.StripHeight;
