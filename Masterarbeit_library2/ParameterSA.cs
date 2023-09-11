@@ -36,7 +36,7 @@ public class ParameterSA : ICloneable
         Parameter a2 = new Parameter(parameters[1], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
         Parameter a3 = new Parameter(parameters[2], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5 }, 3, 0.1, 1);
         Parameter a4 = new Parameter(parameters[3], algos.StripHeight, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
-        Parameter rewarding = new Parameter(parameters[4], algos.StripHeight, new int[] { 0, 1 }, 1, 0.1, 1); // 0,1
+        Parameter rewarding = new Parameter(parameters[4], algos.StripHeight, new int[] { 1, 1 }, 1, 0.1, 1); // 0,1
         Parameter opt = new Parameter(parameters[5], algos.StripHeight, new int[] { (int)(parameters[5] * (1 - 2 * PenatlyRange)), (int)(parameters[5] * (1 - PenatlyRange)), parameters[5], (int)(parameters[5] * (1 + PenatlyRange)), (int)(parameters[5] * (1 + 2 * PenatlyRange)) }, 3, 0.1, 1);
         initialparameters = new Parameter[] { a1, a2, a3, a4, rewarding, opt };
         Bestval = algos.StripHeight;
@@ -87,7 +87,7 @@ public class ParameterSA : ICloneable
         Parameter a2 = new Parameter(rnd.Next(0, 10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
         Parameter a3 = new Parameter(rnd.Next(0, 6), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5 }, 3, 0.1, 1);
         Parameter a4 = new Parameter(rnd.Next(0, 10), int.MaxValue, new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 5, 0.2, 2);
-        Parameter rewarding = new Parameter(rnd.Next(0, 2), int.MaxValue, new int[] { 0, 1 }, 1, 0.1, 1); //0,1
+        Parameter rewarding = new Parameter(rnd.Next(1, 2), int.MaxValue, initialparameters[4].Range, 1, 0.1, 1); //0,1
         //int inputopt = initialparameters.Last().CurrentParval;
         //int[] optval = new int[] { inputopt - 20, inputopt - 10, inputopt, inputopt + 10, inputopt + 20 };
         Parameter opt = new Parameter(initialparameters[5].Range[rnd.Next(initialparameters[5].Range.Length)], int.MaxValue, initialparameters[5].Range, 3, 0.1, 1);
@@ -133,8 +133,8 @@ public class ParameterSA : ICloneable
             Parameter[] par_internalcopy = (Parameter[])par_internal.Clone(); // par_internal.ToArray();
             LS(ref par_internalcopy, ref incumbentobjvalcopy, Temperature, TimeLimit); //do local search
             int[] Key_value = Par_asKey(par_internal);
-            if (!Neighborhood_sofar.ContainsKey(Key_value)) { Add_globalhistory(par_internal, incumbentobjval); } //add to history 
-            if (incumbentobjvalcopy <= Bestval)
+            if (!Neighborhood_sofar.ContainsKey(Key_value)) { Add_globalhistory(par_internalcopy, incumbentobjvalcopy); } //add to history 
+            if ((incumbentobjvalcopy <= Bestval)&& (incumbentobjvalcopy!=0))
             {
                 Bestval = incumbentobjvalcopy;
                 incumbentobjval = incumbentobjvalcopy;
@@ -142,7 +142,7 @@ public class ParameterSA : ICloneable
                 string parstring1 = String.Join(",", Par_asKey(par_internalcopy).Select(p => p.ToString()).ToArray());
                 bestparameters = parstring1;
             }
-            else if (incumbentobjvalcopy < incumbentobjval)
+            else if ((incumbentobjvalcopy <= incumbentobjval)&& (incumbentobjvalcopy != 0))
             {
                 incumbentobjval = incumbentobjvalcopy;
                 par_internal = par_internalcopy;
@@ -265,6 +265,7 @@ public class ParameterSA : ICloneable
                                 Add_globalhistory(par_copy.ToArray(), Bestval);
                                 Add_globalhistory_withLoad(par_copy.ToArray(), Bestval, Solver.Load_order.ToList());
                                 iteration = maxiteration;
+                                unbrokenloop = false;
                                 foreach (Parameter p in par_copy) { p.LSround_completed = true; }
                                 break;
                             }
@@ -279,7 +280,7 @@ public class ParameterSA : ICloneable
                     {
                         samevalval = oldobj;
                         Samevalpars.Add(par_copy.ToArray());
-                        if (Samevalpars.Count > 4) { iteration = maxiteration; break; }
+                        if (Samevalpars.Count > 5) { unbrokenloop = false; iteration = maxiteration; break; }
 
                         double whattodo = (Temperature / InitialTemp);
                         if (whattodo < 0.60) //we are entering if temp is under 50 percent of initial
@@ -297,6 +298,7 @@ public class ParameterSA : ICloneable
                                 else //avoid going back and forth if the solution isnt improving
                                 {
                                     iteration = maxiteration;
+                                   
                                 }
                             }
                         }
@@ -315,16 +317,11 @@ public class ParameterSA : ICloneable
                             {
                                 int refusalmove = rnd.Next(0, 2); //randomly choose either to increase stepsize or to change direction 
 
-                                if (refusalmove == 0)
+                                if ((refusalmove == 0) | ((refusalmove == 1) && (directionchange != 0)))///if direction has been changed on this parameter in this round so far we force step increase
                                 {
                                     stepsize++;
                                 }
-                                else if ((refusalmove == 1) && (directionchange != 0)) //if direction has been changed on this parameter in this round so far we force step increase
-                                {
-
-                                    stepsize++;
-
-                                }
+                               
                                 else if ((refusalmove == 1) && (directionchange == 0))//if direction has never been changed on this parameter in this round so far
                                 {
 

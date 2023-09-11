@@ -38,20 +38,20 @@ public class Extreme_Algorithms : ICloneable
     public int Chosen_mindim { get; set; } = 1;
     public int Curve { get; set; } = 1; //0 soft 1 hard for penalty decision (depends on Opt)
     //
-    public double A1 { get; set; } = 1; //bottom
-    public double A2 { get; set; } = 4;//righside
-    public double A3 { get; set; } = 2;//topside
+    public double A1 { get; set; } = 7; //bottom
+    public double A2 { get; set; } = 5;//righside
+    public double A3 { get; set; } = 0;//topside
     public double A4 { get; set; } = 4; //leftside
     public bool R { get; set; } = true;//rewarding perfect overlap
     public int Gamma { get; set; } = 30; //penalty for strip height incrrease
-    public int Beta { get; set; } = 3; //preference factor of lower positions
+    public int Beta { get; set; } = 5; //preference factor of lower positions
     public bool VolumeUse { get; set; } = false; //using volume as a factor to decide
     public int StripHeight { get; set; } = 0;
     public double Largestvol { get; set; }
     public int Timelimit { get; set; } = int.MaxValue;
     public Stopwatch timer { get; set; } = new Stopwatch();
     public int Multiplier { get; set; } = 2; //in the case the mindim is 1 to prevent overlap
-    public int Opt { get; set; } = 1000; //to move the sigmoid curve for penalty 
+    public int Opt { get; set; } = 960; //to move the sigmoid curve for penalty 
     public double RatioBan { get; set; } = 100;
     public string RatioBanOrientation { get; set; } = "Horizontal";//"Vertical"; "Horizontal";
     public double Shadowsearchmultiplier { get; set; } = 2; //multiplies the maxdim
@@ -65,7 +65,7 @@ public class Extreme_Algorithms : ICloneable
     internal List<Vertex2D> Virtual_Vertices { get; set; } = new List<Vertex2D>();
     internal Tuple<int, int> MinMax_Y_Current_E { get; set; } = new Tuple<int, int>(0, 0);
     internal Dictionary<Point2D, MasterRule> Rules { get; set; } = new Dictionary<Point2D, MasterRule>();
-    public Package2D Bin { get; set; } = new Package2D(1000, 1500); //needs to be adjusted
+    public Package2D Bin { get; set; } = new Package2D(640, 1500); //needs to be adjusted
     public Random rnd = new Random();
     public Extreme_Algorithms() { }
     public int RunNewPars(Parameter[] parameters)

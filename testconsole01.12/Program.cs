@@ -18,8 +18,10 @@ class Program
 {
     public static void Main(string[] args)
     {
+        // testing changes
+        //is this working?
 
-        string filepath = @"C:\classes\masterarbeit\instances\daniel\Path\path5.txt";
+        string filepath = @"C:\classes\masterarbeit\instances\daniel\Burke\n10-formatted.txt";
         //"C:\classes\masterarbeit\instances\daniel\cgcut\cgcut1.txt"
         //"C:\classes\masterarbeit\instances\c\c\C1\C1_1.txt"
         //"C:\classes\masterarbeit\instances\daniel\Nice\nice1.txt"
@@ -32,14 +34,14 @@ class Program
         //@"C:\classes\masterarbeit\instances\N_T\N_T\N1c.ins2D"
         //"C:\classes\masterarbeit\instances\daniel\Path\path6.txt"
         //@"C:\classes\masterarbeit\instances\daniel\Nice\nice6.txt";
-        string outputpath = @"C:\Users\tando\Desktop\tests\";
+        string outputpath = "C:\\classes\\masterarbeit\\tests";
         Filehandler fhandler = new Filehandler(filepath);
         fhandler.Output = outputpath;
         Extreme_Algorithms algomain = new Extreme_Algorithms();
         algomain.StripHeight = 1100;
 
         algomain.Input_packages = fhandler.Packagelist.ToList();
-        algomain.Input_Analysis();
+        //algomain.Input_Analysis();
 
         List<Extreme_Algorithms> solvers = new List<Extreme_Algorithms>() { };
         for (int i = 0; i < 5; i++)
@@ -68,15 +70,15 @@ class Program
 
 
 
-        int timelimit = 60; //in minutes
+        int timelimit = 480; //in minutes
         timelimit *= 60000;
 
-        //Parallel.For(0, 5, i =>
-        //{
-        //    anneilings[i].SA(timelimit);
+        Parallel.For(0, 5, i =>
+        {
+            anneilings[i].SA(timelimit);
 
-        //});
-        anneilings[1].SA(timelimit);
+        });
+        //anneilings[1].SA(timelimit);
 
 
 
@@ -106,11 +108,11 @@ class Program
                 foreach (int i in l)
                 {
                     Console.Write(i + ";");
-                }              
+                }
                 Console.WriteLine();
-                
+
             }
-            //Console.WriteLine("Elapsed time per individual run: " + p.Timeperit);
+            Console.WriteLine("Elapsed time per individual run: " + p.Timeperit);
             averagetime += p.Timeperit / anneilings.Count;
             //foreach (var item in p.Neighborhood_withLoad)
             //{
